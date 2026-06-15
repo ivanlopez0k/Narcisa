@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Narcisa.BD/Narcisa.BD.csproj" />
+  <Project Path="Narcisa.Repositorio/Narcisa.Repositorio.csproj" />
+  <Project Path="Narcisa.Server/Narcisa.Server.Client/Narcisa.Server.Client.csproj" />
+  <Project Path="Narcisa.Server/Narcisa.Server/Narcisa.Server.csproj" />
+  <Project Path="Narcisa.Servicios/Narcisa.Servicios.csproj" />
+  <Project Path="Narcisa.Shared/Narcisa.Shared.csproj" />
+</Solution>
