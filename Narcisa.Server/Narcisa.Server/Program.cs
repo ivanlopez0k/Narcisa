@@ -19,6 +19,7 @@ builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio,
 // Servicio HTTP y Estado para componentes Blazor
 builder.Services.AddScoped<Narcisa.Servicios.ServicioHTTP.IHttpService, Narcisa.Servicios.ServicioHTTP.HttpService>();
 builder.Services.AddScoped<Narcisa.Servicios.CarritoStateService>();
+builder.Services.AddScoped<Narcisa.Servicios.AuthStateService>();
 builder.Services.AddScoped(sp =>
 {
     var nav = sp.GetService<Microsoft.AspNetCore.Components.NavigationManager>();

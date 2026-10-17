@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject CarritoStateService CarritoState
+@inject AuthStateService AuthState
 @implements IDisposable
 
 <div class="page">
@@ -14,9 +15,19 @@
                 <span>Envíos a todo el país | Narcisa Estudio de Interiores</span>
             </div>
             <div class="d-flex align-items-center gap-3 ms-auto">
-                <span class="badge rounded-pill px-3 py-2" style="background-color: var(--brand-peach-light); color: var(--brand-peach); border: 1px solid var(--brand-peach-soft);">
-                    <i class="bi bi-person-circle me-1"></i> Cliente Demo
-                </span>
+                @if (AuthState.EstaAutenticado)
+                {
+                    <span class="badge rounded-pill px-3 py-2" style="background-color: var(--brand-peach-light); color: var(--brand-peach); border: 1px solid var(--brand-peach-soft);">
+                        <i class="bi bi-person-circle me-1"></i> @AuthState.UsuarioActual!.Nombre
+                    </span>
+                }
+                else
+                {
+                    <a href="login" class="badge rounded-pill px-3 py-2 text-decoration-none text-muted" 
+                       style="background-color: #f7efe7; border: 1px solid #ebdccd;">
+                        <i class="bi bi-person me-1"></i> Iniciar Sesión
+                    </a>
+                }
                 <a href="carrito" class="btn btn-outline-dark btn-sm px-3 py-2 d-flex align-items-center gap-2">
                     <i class="bi bi-bag"></i>
                     <span>Mi Carrito</span>
@@ -46,10 +57,12 @@
     protected override void OnInitialized()
     {
         CarritoState.OnChange += StateHasChanged;
+        AuthState.OnChange += StateHasChanged;
     }
 
     public void Dispose()
     {
         CarritoState.OnChange -= StateHasChanged;
+        AuthState.OnChange -= StateHasChanged;
     }
 }

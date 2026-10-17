@@ -1,7 +1,9 @@
 @page "/checkout"
 @inject CarritoStateService CarritoState
+@inject AuthStateService AuthState
 @inject IHttpService Http
 @inject NavigationManager Nav
+@implements IDisposable
 
 <PageTitle>Confirmar Entrega — Narcisa Estudio</PageTitle>
 
@@ -51,11 +53,39 @@ else
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label text-muted small fw-semibold">Titular del pedido</label>
-                        <input type="text" class="form-control bg-light" value="Cliente Demo (cliente@demo.com)" disabled readonly />
-                        <div class="form-text small">Sesión de cliente en la plataforma.</div>
-                    </div>
+                    @if (AuthState.EstaAutenticado)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Titular del pedido</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted">
+                                    <i class="bi bi-person-check-fill" style="color: var(--brand-peach);"></i>
+                                </span>
+                                <input type="text" class="form-control bg-light border-start-0" 
+                                       value="@AuthState.UsuarioActual!.Nombre (@AuthState.UsuarioActual!.Email)" disabled readonly />
+                            </div>
+                            <div class="form-text small text-muted">Sesión activa como @(AuthState.UsuarioActual!.Rol ?? "Cliente").</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning border-0 rounded-3 shadow-sm d-flex flex-column flex-sm-row align-items-sm-center justify-content-between p-3 mb-4 gap-3" 
+                             style="background-color: #fef8f3; border-left: 4px solid var(--brand-peach) !important;">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-2" 
+                                      style="background-color: var(--brand-peach-light); color: var(--brand-peach); flex-shrink: 0;">
+                                    <i class="bi bi-person-exclamation fs-5"></i>
+                                </span>
+                                <div>
+                                    <div class="fw-bold text-dark small">No has iniciado sesión</div>
+                                    <div class="small text-muted">Iniciá sesión para vincular este pedido a tu cuenta personal.</div>
+                                </div>
+                            </div>
+                            <a href="login?returnUrl=checkout" class="btn btn-sm btn-primary px-3 py-2 text-nowrap">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                            </a>
+                        </div>
+                    }
 
                     <EditForm Model="@confirmarDto" OnValidSubmit="ConfirmarPedido">
                         <DataAnnotationsValidator />
@@ -162,6 +192,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        AuthState.OnChange += StateHasChanged;
+        CarritoState.OnChange += StateHasChanged;
         await CarritoState.InicializarAsync();
         if (CarritoState.CarritoActual != null && !string.IsNullOrEmpty(CarritoState.CarritoActual.Direccion))
         {
@@ -172,6 +204,12 @@ else
     private async Task ConfirmarPedido()
     {
         if (CarritoState.CarritoActual == null) return;
+
+        if (!AuthState.EstaAutenticado)
+        {
+            mensajeError = "Por favor iniciá sesión antes de confirmar tu pedido.";
+            return;
+        }
 
         procesando = true;
         mensajeError = null;
@@ -200,5 +238,11 @@ else
         CarritoState.LimpiarCarritoLocal();
         procesando = false;
         Nav.NavigateTo($"pedido-confirmado/{pedidoId}");
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= StateHasChanged;
+        CarritoState.OnChange -= StateHasChanged;
     }
 }

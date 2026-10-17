@@ -9,13 +9,25 @@ namespace Narcisa.Server
     {
         public static void Iniciar(AppDbContext db)
         {
-            if (!db.Usuario.Any())
+            if (!db.Usuario.Any(u => u.email == "cliente@demo.com"))
             {
                 db.Usuario.Add(new Usuario
                 {
                     Nombre = "Cliente Demo",
                     email = "cliente@demo.com",
                     password = "123456",
+                    rol = "Cliente",
+                    createdAt = DateTime.UtcNow
+                });
+            }
+
+            if (!db.Usuario.Any(u => u.email == "juan.perez@ejemplo.com"))
+            {
+                db.Usuario.Add(new Usuario
+                {
+                    Nombre = "Profesor Juan Pérez",
+                    email = "juan.perez@ejemplo.com",
+                    password = "password123",
                     rol = "Cliente",
                     createdAt = DateTime.UtcNow
                 });

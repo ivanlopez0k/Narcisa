@@ -1,4 +1,5 @@
 @inject CarritoStateService CarritoState
+@inject AuthStateService AuthState
 @implements IDisposable
 
 <div class="top-row px-3 d-flex align-items-center justify-content-between">
@@ -46,6 +47,46 @@
                 <span>Checkout</span>
             </NavLink>
         </div>
+
+        <div class="my-3 mx-3" style="border-top: 1px solid #ebdccd;"></div>
+
+        @if (AuthState.EstaAutenticado)
+        {
+            <div class="px-3 py-2">
+                <div class="p-3 rounded-3 shadow-sm text-center mb-2" 
+                     style="background: linear-gradient(135deg, #fdf6f0 0%, #faeee5 100%); border: 1px solid #ebdccd;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2 shadow-sm"
+                         style="width: 36px; height: 36px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                        <i class="bi bi-person-fill fs-5"></i>
+                    </div>
+                    <div class="fw-bold small text-truncate" style="color: var(--brand-text-dark);" title="@AuthState.UsuarioActual?.Nombre">
+                        Hola, @AuthState.UsuarioActual?.Nombre
+                    </div>
+                    <div class="text-muted" style="font-size: 0.72rem;">@AuthState.UsuarioActual?.Email</div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-2" 
+                        @onclick="CerrarSesion">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Salir</span>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item">
+                <NavLink class="nav-link" href="login">
+                    <i class="bi bi-box-arrow-in-right me-2 fs-5 text-secondary"></i>
+                    <span>Iniciar Sesión</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="register">
+                    <i class="bi bi-person-plus-fill me-2 fs-5 text-secondary"></i>
+                    <span>Registrarse</span>
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
@@ -53,11 +94,18 @@
     protected override async Task OnInitializedAsync()
     {
         CarritoState.OnChange += StateHasChanged;
+        AuthState.OnChange += StateHasChanged;
         await CarritoState.InicializarAsync();
+    }
+
+    private void CerrarSesion()
+    {
+        AuthState.Logout();
     }
 
     public void Dispose()
     {
         CarritoState.OnChange -= StateHasChanged;
+        AuthState.OnChange -= StateHasChanged;
     }
 }

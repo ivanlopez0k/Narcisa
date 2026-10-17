@@ -1,0 +1,134 @@
+@page "/login"
+@inject AuthStateService AuthState
+@inject NavigationManager Nav
+
+<PageTitle>Iniciar Sesión — Narcisa Estudio</PageTitle>
+
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="text-center mb-4">
+            <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2 shadow-sm" 
+                  style="width: 52px; height: 52px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                <i class="bi bi-person-lock fs-3"></i>
+            </span>
+            <h1 class="h3 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Bienvenido a Narcisa</h1>
+            <p class="text-muted small">Ingresá a tu cuenta para continuar con tus compras y pedidos.</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
+                <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+            </div>
+        }
+
+        <!-- Tarjeta de Acceso Rápido para el Profesor / Evaluador -->
+        <div class="card mb-4 border-0 shadow-sm" 
+             style="background: linear-gradient(135deg, #fef5ee 0%, #fae8dc 100%); border: 1px solid #f0d6c4 !important;">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-circle p-2" style="background-color: var(--brand-peach); color: #fff;">
+                        <i class="bi bi-mortarboard-fill fs-6"></i>
+                    </span>
+                    <div>
+                        <div class="fw-bold small text-dark">Acceso Rápido Docente</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">juan.perez@ejemplo.com / password123</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-dark btn-sm px-3 py-1 shadow-sm" 
+                        @onclick="AutocompletarProfesor" title="Autocompletar formulario con usuario docente">
+                    <i class="bi bi-magic me-1"></i> Rellenar datos
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulario Principal de Login -->
+        <div class="card border-0 shadow-sm overflow-hidden mb-4">
+            <div class="card-body p-4 p-md-5">
+                <EditForm Model="@loginDto" OnValidSubmit="ProcesarLogin">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" style="color: var(--brand-text-dark);">Correo electrónico (*)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <InputText @bind-Value="loginDto.Email" class="form-control border-start-0" 
+                                       placeholder="nombre@ejemplo.com" type="email" />
+                        </div>
+                        <ValidationMessage For="@(() => loginDto.Email)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-semibold small mb-0" style="color: var(--brand-text-dark);">Contraseña (*)</label>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <InputText @bind-Value="loginDto.Password" class="form-control border-start-0" 
+                                       placeholder="••••••••" type="password" />
+                        </div>
+                        <ValidationMessage For="@(() => loginDto.Password)" class="text-danger small mt-1" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                            disabled="@procesando">
+                        @if (procesando)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>Iniciando sesión...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-box-arrow-in-right fs-5"></i>
+                            <span>Iniciar Sesión</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+            <div class="card-footer bg-light text-center py-3 border-top" style="border-color: #f0e6dc !important;">
+                <span class="text-muted small">¿No tenés una cuenta en Narcisa?</span>
+                <a href="register" class="fw-semibold ms-1 small">Registrate acá</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private LoginDTO loginDto = new();
+    private bool procesando = false;
+    private string? mensajeError;
+
+    private void AutocompletarProfesor()
+    {
+        loginDto.Email = "juan.perez@ejemplo.com";
+        loginDto.Password = "password123";
+        mensajeError = null;
+    }
+
+    private async Task ProcesarLogin()
+    {
+        procesando = true;
+        mensajeError = null;
+
+        var (exito, error) = await AuthState.LoginAsync(loginDto);
+        procesando = false;
+
+        if (exito)
+        {
+            var destino = string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl;
+            Nav.NavigateTo(destino);
+        }
+        else
+        {
+            mensajeError = error ?? "Email o contraseña incorrectos.";
+        }
+    }
+}
