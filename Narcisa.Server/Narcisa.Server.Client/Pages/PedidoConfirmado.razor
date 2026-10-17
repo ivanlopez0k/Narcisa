@@ -7,61 +7,69 @@
 @if (cargando)
 {
     <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3 text-muted">Recuperando detalles del pedido confirmado...</p>
+        <div class="spinner-border" style="color: var(--brand-peach);" role="status"></div>
+        <p class="mt-3 text-muted">Recuperando detalles de tu orden...</p>
     </div>
 }
 else if (pedido == null)
 {
-    <div class="alert alert-warning text-center my-5 p-4 shadow-sm">
-        <i class="bi bi-exclamation-circle display-4 text-warning"></i>
-        <h4 class="mt-3 fw-bold">Pedido no encontrado</h4>
-        <p class="text-muted">No se pudo recuperar la información del pedido solicitado.</p>
-        <a href="" class="btn btn-dark mt-2">Volver al Inicio</a>
+    <div class="card text-center my-5 p-5 bg-white border">
+        <div class="card-body">
+            <i class="bi bi-exclamation-circle display-4" style="color: var(--brand-peach);"></i>
+            <h4 class="mt-3 fw-bold font-serif" style="color: var(--brand-text-dark);">Pedido no encontrado</h4>
+            <p class="text-muted small">No pudimos recuperar la información del pedido solicitado.</p>
+            <a href="" class="btn btn-primary mt-2">Volver al Catálogo</a>
+        </div>
     </div>
 }
 else
 {
     <div class="container py-4" style="max-width: 760px;">
         <!-- Header de Éxito -->
-        <div class="card border-0 shadow-sm text-center py-5 px-4 mb-4 bg-white">
+        <div class="card text-center py-5 px-4 mb-4 bg-white">
             <div class="card-body">
                 <div class="mb-3">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; background-color: #eaf5ec; color: #2b7a3e;">
+                        <i class="bi bi-check-lg" style="font-size: 3rem;"></i>
+                    </div>
                 </div>
-                <h1 class="h2 fw-bold text-dark mb-2">¡Pedido Confirmado con Éxito!</h1>
+                <h1 class="h2 fw-bold font-serif mb-2" style="color: var(--brand-text-dark);">¡Pedido Confirmado con Éxito!</h1>
                 <p class="text-muted mb-3">
-                    Tu orden <strong>#@pedido.Id</strong> fue registrada correctamente en el sistema de Narcisa Estudio.
+                    Tu orden <strong style="color: var(--brand-peach);">#@pedido.Id</strong> fue registrada correctamente en Narcisa Estudio.
                 </p>
 
-                <div class="d-inline-flex align-items-center gap-2 bg-light border px-4 py-2 rounded-pill">
-                    <span class="text-muted small">Estado actual del pedido:</span>
-                    <span class="badge bg-warning text-dark fs-6 px-3 py-1">@pedido.Estado</span>
+                <div class="d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill" 
+                     style="background-color: var(--brand-peach-light); border: 1px solid var(--brand-peach-soft);">
+                    <span class="small" style="color: var(--brand-text-muted);">Estado del pedido:</span>
+                    <span class="badge bg-warning rounded-pill px-3 py-1">@pedido.Estado</span>
                 </div>
             </div>
         </div>
 
         <!-- Detalle de la Orden -->
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card mb-4 overflow-hidden">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-receipt me-2 text-primary"></i> Detalle de la Orden
+                <h5 class="fw-bold mb-0 font-serif" style="color: var(--brand-text-dark);">
+                    <i class="bi bi-receipt me-2" style="color: var(--brand-peach);"></i> Detalle de la Orden
                 </h5>
                 <span class="text-muted small">Fecha: @pedido.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
             </div>
             <div class="card-body p-4">
                 <div class="mb-4">
-                    <h6 class="fw-bold text-dark mb-1">
-                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Dirección de Entrega:
+                    <h6 class="fw-bold mb-1 small text-uppercase" style="color: var(--brand-text-muted); letter-spacing: 1px;">
+                        <i class="bi bi-geo-alt-fill me-1" style="color: var(--brand-peach);"></i> Dirección de Entrega:
                     </h6>
-                    <p class="text-muted mb-0 ps-3">@pedido.Direccion</p>
+                    <p class="fw-semibold ps-3 mb-0" style="color: var(--brand-text-dark); font-size: 1.05rem;">
+                        @pedido.Direccion
+                    </p>
                 </div>
 
-                <h6 class="fw-bold text-dark mb-2">
-                    <i class="bi bi-box-seam-fill text-secondary me-1"></i> Productos pedidos:
+                <h6 class="fw-bold mb-3 small text-uppercase" style="color: var(--brand-text-muted); letter-spacing: 1px;">
+                    <i class="bi bi-box-seam me-1"></i> Piezas reservadas:
                 </h6>
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
+                    <table class="table align-middle mb-0">
                         <thead class="table-light small">
                             <tr>
                                 <th>Producto</th>
@@ -75,18 +83,18 @@ else
                             {
                                 <tr>
                                     <td>
-                                        <span class="fw-semibold text-dark">@item.ProductoNombre</span>
+                                        <span class="fw-semibold" style="color: var(--brand-text-dark);">@item.ProductoNombre</span>
                                     </td>
-                                    <td class="text-center">@item.Cantidad</td>
-                                    <td class="text-end">$@item.PrecioUnitario.ToString("N0")</td>
-                                    <td class="text-end fw-bold">$@item.Subtotal.ToString("N0")</td>
+                                    <td class="text-center text-muted">@item.Cantidad</td>
+                                    <td class="text-end text-muted">$@item.PrecioUnitario.ToString("N0")</td>
+                                    <td class="text-end fw-bold font-serif" style="color: var(--brand-peach);">$@item.Subtotal.ToString("N0")</td>
                                 </tr>
                             }
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
-                                <td colspan="3" class="text-end fw-bold fs-6">Total Pedido:</td>
-                                <td class="text-end fw-bold fs-6 text-dark">$@pedido.Total.ToString("N0")</td>
+                                <td colspan="3" class="text-end fw-bold font-serif fs-5" style="color: var(--brand-text-dark);">Total Pedido:</td>
+                                <td class="text-end fw-bold font-serif fs-5" style="color: var(--brand-peach);">$@pedido.Total.ToString("N0")</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -95,18 +103,21 @@ else
         </div>
 
         <!-- Callout Caso de Uso 01 / Próximo Paso CU-02 -->
-        <div class="card border-primary bg-primary bg-opacity-10 shadow-sm mb-4">
+        <div class="card mb-4" style="background-color: var(--brand-peach-light); border: 1px solid var(--brand-peach-soft) !important;">
             <div class="card-body p-4">
                 <div class="d-flex align-items-start gap-3">
-                    <i class="bi bi-award-fill text-primary display-6"></i>
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center p-2" 
+                         style="background-color: #fce8db; color: #e76f51;">
+                        <i class="bi bi-award-fill fs-3"></i>
+                    </div>
                     <div>
-                        <h5 class="fw-bold text-primary mb-1">Caso de Uso CU-01 Completado al 100%</h5>
-                        <p class="small text-dark mb-2">
-                            Se ejecutó el flujo completo: navegación de catálogo, agregado a carrito en base de datos, 
-                            recalculo de totales, persistencia de entrega y confirmación del pedido con reserva de stock.
+                        <h5 class="fw-bold mb-1 font-serif" style="color: var(--brand-text-dark);">Caso de Uso CU-01 Completado al 100%</h5>
+                        <p class="small mb-2" style="color: var(--brand-text-muted); line-height: 1.5;">
+                            Se completó la selección de productos, carga en carrito sobre base de datos, 
+                            recalculo de subtotales y total, validación de stock y persistencia de entrega en estado <strong>Pendiente de pago</strong>.
                         </p>
-                        <p class="small text-muted mb-0">
-                            <strong>Próximo paso según el Brief</strong>: CU-02 (Procesar pago con pasarela externa Mercado Pago para pasar a estado <code>Pagado</code>).
+                        <p class="small mb-0" style="color: var(--brand-peach); font-weight: 600;">
+                            Siguiente etapa del Brief: CU-02 (Procesamiento de pago mediante pasarela externa Mercado Pago).
                         </p>
                     </div>
                 </div>
@@ -115,7 +126,7 @@ else
 
         <!-- Acciones -->
         <div class="text-center">
-            <a href="" class="btn btn-dark px-4 py-2 fw-semibold">
+            <a href="" class="btn btn-primary px-4 py-3 fw-semibold shadow-sm">
                 <i class="bi bi-arrow-left me-2"></i> Volver a la Tienda
             </a>
         </div>

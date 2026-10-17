@@ -1,41 +1,49 @@
 @inject CarritoStateService CarritoState
 @implements IDisposable
 
-<div class="top-row ps-3 navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold tracking-wide" href="">
-            <i class="bi bi-gem me-2 text-warning"></i>NARCISA ESTUDIO
-        </a>
-    </div>
+<div class="top-row px-3 d-flex align-items-center justify-content-between">
+    <a class="navbar-brand fw-bold d-flex align-items-center font-serif text-dark text-decoration-none" href="">
+        <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2 shadow-sm" 
+              style="width: 34px; height: 34px; background-color: #fce8db; color: #e76f51;">
+            <i class="bi bi-flower1 fs-5"></i>
+        </span>
+        <div>
+            <div style="letter-spacing: 1.5px; font-weight: 700; font-size: 1.1rem; line-height: 1.1;">NARCISA</div>
+            <div class="small text-muted" style="font-size: 0.65rem; letter-spacing: 2px; font-family: var(--brand-font-sans);">ESTUDIO</div>
+        </div>
+    </a>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <i class="bi bi-grid-3x3-gap-fill me-2 fs-5"></i> Catálogo
+                <i class="bi bi-grid-fill me-2 fs-5 text-secondary"></i>
+                <span>Catálogo</span>
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center justify-content-between" href="carrito">
                 <span>
-                    <i class="bi bi-bag-heart-fill me-2 fs-5"></i> Carrito
+                    <i class="bi bi-bag-heart-fill me-2 fs-5 text-secondary"></i>
+                    <span>Carrito</span>
                 </span>
                 @if (CarritoState.CantidadTotalItems > 0)
                 {
-                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1">
+                    <span class="badge bg-warning rounded-pill px-2 py-1">
                         @CarritoState.CantidadTotalItems
                     </span>
                 }
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="checkout">
-                <i class="bi bi-credit-card-2-front-fill me-2 fs-5"></i> Checkout
+                <i class="bi bi-credit-card-2-front-fill me-2 fs-5 text-secondary"></i>
+                <span>Checkout</span>
             </NavLink>
         </div>
     </nav>

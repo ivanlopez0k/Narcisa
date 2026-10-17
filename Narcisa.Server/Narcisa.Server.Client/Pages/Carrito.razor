@@ -7,18 +7,18 @@
 
 <div class="mb-4">
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="">Catálogo</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Carrito de Compras</li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">Carrito de Compras</li>
         </ol>
     </nav>
-    <h1 class="h2 fw-bold text-dark">Tu Carrito de Compras</h1>
-    <p class="text-muted">Revisá los productos elegidos antes de ingresar la dirección de entrega.</p>
+    <h1 class="h2 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Tu Carrito de Compras</h1>
+    <p class="text-muted small">Revisá las piezas seleccionadas antes de coordinar la entrega.</p>
 </div>
 
 @if (!string.IsNullOrEmpty(mensajeError))
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
         <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
     </div>
@@ -26,13 +26,16 @@
 
 @if (CarritoState.CarritoActual == null || CarritoState.CarritoActual.Items.Count == 0)
 {
-    <div class="card border-0 shadow-sm text-center py-5 my-4 bg-light">
+    <div class="card text-center py-5 my-4 bg-white border">
         <div class="card-body">
-            <i class="bi bi-bag-x display-1 text-muted"></i>
-            <h3 class="fw-bold mt-3 text-dark">Tu carrito está vacío</h3>
-            <p class="text-muted">Todavía no agregaste ningún producto decorativo de Narcisa Estudio.</p>
-            <a href="" class="btn btn-dark px-4 py-2 mt-2">
-                <i class="bi bi-arrow-left me-2"></i> Ver Catálogo de Productos
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                 style="width: 80px; height: 80px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                <i class="bi bi-bag fs-1"></i>
+            </div>
+            <h3 class="fw-bold font-serif mt-2" style="color: var(--brand-text-dark);">Tu carrito está vacío</h3>
+            <p class="text-muted small">Descubrí nuestras piezas decorativas y empezá a transformar tus ambientes.</p>
+            <a href="" class="btn btn-primary px-4 py-2 mt-2">
+                <i class="bi bi-arrow-left me-2"></i> Explorar Catálogo
             </a>
         </div>
     </div>
@@ -42,17 +45,19 @@ else
     <div class="row g-4">
         <!-- Lista de Productos en el Carrito -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
+            <div class="card overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark">Productos (@CarritoState.CantidadTotalItems)</span>
-                    <span class="badge bg-light text-dark border">Estado: Carrito</span>
+                    <span class="fw-bold" style="color: var(--brand-text-dark);">
+                        Piezas seleccionadas (@CarritoState.CantidadTotalItems)
+                    </span>
+                    <span class="badge bg-warning rounded-pill px-3 py-1">En preparación</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead class="table-light small text-uppercase">
                                 <tr>
-                                    <th scope="col" class="ps-3">Producto</th>
+                                    <th scope="col" class="ps-4">Producto</th>
                                     <th scope="col" class="text-center">Precio</th>
                                     <th scope="col" class="text-center" style="width: 140px;">Cantidad</th>
                                     <th scope="col" class="text-end">Subtotal</th>
@@ -63,39 +68,49 @@ else
                                 @foreach (var item in CarritoState.CarritoActual.Items)
                                 {
                                     <tr>
-                                        <td class="ps-3 py-3">
+                                        <td class="ps-4 py-3">
                                             <div class="d-flex align-items-center gap-3">
-                                                <div class="bg-light rounded p-2 text-center" style="width: 50px; height: 50px;">
-                                                    <i class="bi bi-box-seam fs-4 text-secondary"></i>
+                                                <div class="rounded overflow-hidden text-center shadow-sm" 
+                                                     style="width: 60px; height: 60px; background-color: #f7efe7; flex-shrink: 0;">
+                                                    @if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                                    {
+                                                        <img src="@item.ImagenUrl" class="w-100 h-100" style="object-fit: cover;" alt="@item.ProductoNombre" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                                            <i class="bi bi-image fs-4"></i>
+                                                        </div>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0 fw-semibold text-dark">@item.ProductoNombre</h6>
-                                                    <span class="small text-muted">Código: #@item.ProductoId</span>
+                                                    <h6 class="mb-0 fw-semibold" style="color: var(--brand-text-dark);">@item.ProductoNombre</h6>
+                                                    <span class="small text-muted">ID: #@item.ProductoId</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center fw-medium">
+                                        <td class="text-center fw-medium text-muted">
                                             $@item.PrecioUnitario.ToString("N0")
                                         </td>
                                         <td class="text-center">
-                                            <div class="input-group input-group-sm">
+                                            <div class="input-group input-group-sm justify-content-center" style="max-width: 110px; margin: 0 auto;">
                                                 <button class="btn btn-outline-secondary" type="button" 
                                                         disabled="@procesando"
                                                         @onclick="() => ModificarCantidad(item.ProductoId, item.Cantidad - 1)">-</button>
-                                                <input type="text" class="form-control text-center" readonly value="@item.Cantidad" />
+                                                <input type="text" class="form-control text-center bg-white" readonly value="@item.Cantidad" />
                                                 <button class="btn btn-outline-secondary" type="button" 
                                                         disabled="@procesando"
                                                         @onclick="() => ModificarCantidad(item.ProductoId, item.Cantidad + 1)">+</button>
                                             </div>
                                         </td>
-                                        <td class="text-end fw-bold text-dark">
+                                        <td class="text-end fw-bold font-serif" style="color: var(--brand-peach);">
                                             $@item.Subtotal.ToString("N0")
                                         </td>
-                                        <td class="text-center pe-3">
+                                        <td class="text-center pe-4">
                                             <button class="btn btn-link text-danger p-0" title="Eliminar ítem"
                                                     disabled="@procesando"
                                                     @onclick="() => EliminarItem(item.ProductoId)">
-                                                <i class="bi bi-trash3-fill"></i>
+                                                <i class="bi bi-trash3"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -114,33 +129,33 @@ else
 
         <!-- Resumen del Pedido -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 2rem;">
+            <div class="card sticky-top" style="top: 2rem;">
                 <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="fw-bold mb-0 text-dark">Resumen del Pedido</h5>
+                    <h5 class="fw-bold mb-0 font-serif" style="color: var(--brand-text-dark);">Resumen de tu Orden</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal productos</span>
+                        <span class="text-muted small">Subtotal productos</span>
                         <span class="fw-semibold">$@CarritoState.CarritoActual.Total.ToString("N0")</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Cálculo de envío</span>
-                        <span class="text-success fw-semibold">A convenir</span>
+                        <span class="text-muted small">Coordinación de envío</span>
+                        <span class="text-success small fw-semibold">Gratis</span>
                     </div>
-                    <hr />
+                    <hr class="my-3" style="border-color: #ebdccd;" />
                     <div class="d-flex justify-content-between align-items-baseline mb-4">
-                        <span class="fs-5 fw-bold text-dark">Total</span>
-                        <span class="fs-4 fw-bold text-dark">$@CarritoState.CarritoActual.Total.ToString("N0")</span>
+                        <span class="fs-5 fw-bold font-serif" style="color: var(--brand-text-dark);">Total</span>
+                        <span class="fs-3 fw-bold font-serif" style="color: var(--brand-peach);">$@CarritoState.CarritoActual.Total.ToString("N0")</span>
                     </div>
 
-                    <a href="checkout" class="btn btn-dark w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                    <a href="checkout" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 fw-semibold shadow-sm">
                         <span>Iniciar Entrega y Checkout</span>
                         <i class="bi bi-arrow-right"></i>
                     </a>
 
-                    <div class="mt-3 p-3 bg-light rounded text-muted small">
-                        <i class="bi bi-shield-check text-success me-1"></i>
-                        <span>El pedido se reservará en estado pendiente de pago para su procesamiento posterior.</span>
+                    <div class="mt-3 p-3 rounded-3 text-muted small" style="background-color: var(--brand-peach-light); border: 1px solid var(--brand-peach-soft);">
+                        <i class="bi bi-shield-check me-1" style="color: var(--brand-peach);"></i>
+                        <span style="color: var(--brand-text-dark);">Completá la entrega para confirmar el pedido (CU-01).</span>
                     </div>
                 </div>
             </div>

@@ -8,19 +8,21 @@
     </div>
 
     <main>
-        <div class="top-row px-4 d-flex justify-content-between align-items-center bg-white border-bottom shadow-sm">
+        <div class="top-row px-4 d-flex justify-content-between align-items-center">
             <div class="d-none d-md-block text-muted small">
-                <i class="bi bi-geo-alt-fill text-danger me-1"></i> Entrega a todo el país | Narcisa Estudio Decoración
+                <i class="bi bi-geo-alt-fill me-1" style="color: var(--brand-peach);"></i>
+                <span>Envíos a todo el país | Narcisa Estudio de Interiores</span>
             </div>
             <div class="d-flex align-items-center gap-3 ms-auto">
-                <span class="badge bg-light text-dark border px-3 py-2">
-                    <i class="bi bi-person-circle me-1 text-primary"></i> Cliente Demo
+                <span class="badge rounded-pill px-3 py-2" style="background-color: var(--brand-peach-light); color: var(--brand-peach); border: 1px solid var(--brand-peach-soft);">
+                    <i class="bi bi-person-circle me-1"></i> Cliente Demo
                 </span>
-                <a href="carrito" class="btn btn-outline-dark position-relative btn-sm px-3 py-2">
-                    <i class="bi bi-cart3 me-1"></i> Carrito
+                <a href="carrito" class="btn btn-outline-dark btn-sm px-3 py-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-bag"></i>
+                    <span>Mi Carrito</span>
                     @if (CarritoState.CantidadTotalItems > 0)
                     {
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-white">
+                        <span class="badge rounded-pill bg-warning">
                             @CarritoState.CantidadTotalItems
                         </span>
                     }
@@ -28,7 +30,7 @@
             </div>
         </div>
 
-        <article class="content px-4 py-3">
+        <article class="content px-4 py-4">
             @Body
         </article>
     </main>
