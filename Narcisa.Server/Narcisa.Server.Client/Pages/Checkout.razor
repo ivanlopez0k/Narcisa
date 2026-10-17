@@ -1,0 +1,188 @@
+@page "/checkout"
+@inject CarritoStateService CarritoState
+@inject IHttpService Http
+@inject NavigationManager Nav
+
+<PageTitle>Confirmar Pedido — Narcisa Estudio</PageTitle>
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="">Catálogo</a></li>
+            <li class="breadcrumb-item"><a href="carrito">Carrito</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Datos de Entrega y Confirmación</li>
+        </ol>
+    </nav>
+    <h1 class="h2 fw-bold text-dark">Confirmación de Pedido</h1>
+    <p class="text-muted">Completá los datos de entrega para finalizar tu pedido en Narcisa Estudio.</p>
+</div>
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
+        <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+    </div>
+}
+
+@if (CarritoState.CarritoActual == null || CarritoState.CarritoActual.Items.Count == 0)
+{
+    <div class="card border-0 shadow-sm text-center py-5 bg-light">
+        <div class="card-body">
+            <i class="bi bi-cart-x display-3 text-muted"></i>
+            <h4 class="fw-bold mt-3 text-dark">No hay productos en el carrito</h4>
+            <p class="text-muted">Para confirmar un pedido, primero debés seleccionar productos del catálogo.</p>
+            <a href="" class="btn btn-dark px-4 py-2 mt-2">Ir al Catálogo</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <!-- Formulario de Entrega -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-geo-alt me-2 text-danger"></i> 1. Datos de Entrega
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-semibold">Cliente</label>
+                        <input type="text" class="form-control" value="Cliente Demo (cliente@demo.com)" disabled readonly />
+                        <div class="form-text">Usuario autenticado en el sistema.</div>
+                    </div>
+
+                    <EditForm Model="@confirmarDto" OnValidSubmit="ConfirmarPedido">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark">Dirección de Entrega (*)</label>
+                            <InputText @bind-Value="confirmarDto.Direccion" class="form-control" 
+                                       placeholder="Ej: Av. San Martín 1234, Piso 2 B, Ciudad" />
+                            <ValidationMessage For="@(() => confirmarDto.Direccion)" class="text-danger small mt-1" />
+                            <div class="form-text">Indicar calle, numeración y localidad de recepción.</div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 mb-4 border">
+                            <h6 class="fw-bold text-dark mb-1">
+                                <i class="bi bi-info-circle me-1 text-primary"></i> Caso de Uso CU-01
+                            </h6>
+                            <p class="small text-muted mb-0">
+                                Al confirmar, el sistema registrará formalmente el pedido en base de datos con estado 
+                                <strong class="text-dark">Pendiente de pago</strong>, descontando stock y dejándolo listo para la pasarela de pago (CU-02).
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <a href="carrito" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Volver al Carrito
+                            </a>
+                            <button type="submit" class="btn btn-dark px-4 py-2 fw-semibold d-flex align-items-center gap-2" 
+                                    disabled="@procesando">
+                                @if (procesando)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span>Confirmando Pedido...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check2-circle fs-5"></i>
+                                    <span>Confirmar Pedido</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen del Carrito -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 2rem;">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">Resumen de Compra</h5>
+                    <span class="badge bg-secondary">#Pedido: @CarritoState.CarritoActual.Id</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in CarritoState.CarritoActual.Items)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <h6 class="my-0 fw-semibold text-dark">@item.ProductoNombre</h6>
+                                    <small class="text-muted">Cantidad: @item.Cantidad x $@item.PrecioUnitario.ToString("N0")</small>
+                                </div>
+                                <span class="fw-bold text-dark">$@item.Subtotal.ToString("N0")</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="card-footer bg-white p-3 border-top">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-semibold">$@CarritoState.CarritoActual.Total.ToString("N0")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Envío</span>
+                        <span class="text-success fw-semibold">Gratis / A coordinar</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <span class="fs-5 fw-bold text-dark">Total a Pagar</span>
+                        <span class="fs-4 fw-bold text-dark">$@CarritoState.CarritoActual.Total.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ConfirmarPedidoDTO confirmarDto = new();
+    private bool procesando = false;
+    private string? mensajeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarritoState.InicializarAsync();
+        if (CarritoState.CarritoActual != null && !string.IsNullOrEmpty(CarritoState.CarritoActual.Direccion))
+        {
+            confirmarDto.Direccion = CarritoState.CarritoActual.Direccion;
+        }
+    }
+
+    private async Task ConfirmarPedido()
+    {
+        if (CarritoState.CarritoActual == null) return;
+
+        procesando = true;
+        mensajeError = null;
+
+        int pedidoId = CarritoState.CarritoActual.Id;
+
+        // 1. Guardar dirección
+        var dirResp = await Http.PutAsync<ConfirmarPedidoDTO, PedidoDTO>($"api/pedido/{pedidoId}/direccion", confirmarDto);
+        if (dirResp.Error)
+        {
+            mensajeError = dirResp.Mensaje ?? "No se pudo registrar la dirección de entrega.";
+            procesando = false;
+            return;
+        }
+
+        // 2. Confirmar pedido (pasa a Pendiente de pago y descuenta stock)
+        var confResp = await Http.PostAsync<object?, PedidoDTO>($"api/pedido/{pedidoId}/confirmar", null);
+        if (confResp.Error || confResp.Respuesta == null)
+        {
+            mensajeError = confResp.Mensaje ?? "No se pudo confirmar el pedido.";
+            procesando = false;
+            return;
+        }
+
+        // 3. Limpiar estado local del carrito y navegar a confirmación
+        CarritoState.LimpiarCarritoLocal();
+        procesando = false;
+        Nav.NavigateTo($"pedido-confirmado/{pedidoId}");
+    }
+}

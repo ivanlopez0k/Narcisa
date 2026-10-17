@@ -1,6 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+@inject CarritoStateService CarritoState
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Narcisa.Server</a>
+        <a class="navbar-brand fw-bold tracking-wide" href="">
+            <i class="bi bi-gem me-2 text-warning"></i>NARCISA ESTUDIO
+        </a>
     </div>
 </div>
 
@@ -10,21 +15,41 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <i class="bi bi-grid-3x3-gap-fill me-2 fs-5"></i> Catálogo
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link d-flex align-items-center justify-content-between" href="carrito">
+                <span>
+                    <i class="bi bi-bag-heart-fill me-2 fs-5"></i> Carrito
+                </span>
+                @if (CarritoState.CantidadTotalItems > 0)
+                {
+                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1">
+                        @CarritoState.CantidadTotalItems
+                    </span>
+                }
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="checkout">
+                <i class="bi bi-credit-card-2-front-fill me-2 fs-5"></i> Checkout
             </NavLink>
         </div>
     </nav>
 </div>
 
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        CarritoState.OnChange += StateHasChanged;
+        await CarritoState.InicializarAsync();
+    }
+
+    public void Dispose()
+    {
+        CarritoState.OnChange -= StateHasChanged;
+    }
+}

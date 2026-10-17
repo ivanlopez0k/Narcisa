@@ -1,7 +1,228 @@
-﻿@page "/"
+@page "/"
+@inject IHttpService Http
+@inject CarritoStateService CarritoState
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Narcisa Estudio — Catálogo de Diseño y Decoración</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Hero Section -->
+<div class="p-4 p-md-5 mb-4 rounded-3 text-white bg-dark shadow-sm position-relative overflow-hidden" 
+     style="background: linear-gradient(135deg, #1f2421 0%, #3a403d 100%);">
+    <div class="col-md-8 px-0">
+        <span class="badge bg-warning text-dark text-uppercase px-3 py-2 mb-2 fw-semibold">
+            <i class="bi bi-sparkles me-1"></i> Nueva Colección
+        </span>
+        <h1 class="display-5 fw-bold text-light">Transformá tus ambientes</h1>
+        <p class="lead my-3 text-light-50">
+            Piezas de diseño y asesoramiento personalizado para crear espacios únicos con calidez y estilo.
+        </p>
+    </div>
+</div>
 
-Welcome to your new app.
+<!-- Header de Sección y Buscador -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h2 class="h3 fw-bold mb-1 text-dark">Catálogo de Productos</h2>
+        <p class="text-muted mb-0 small">Explorá los productos disponibles y armá tu pedido en simples pasos.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="input-group" style="max-width: 320px;">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" class="form-control border-start-0" placeholder="Buscar producto..." 
+                   @bind="filtroBusqueda" @bind:event="oninput" />
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(mensajeFeedback))
+{
+    <div class="alert alert-@tipoFeedback alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi @(tipoFeedback == "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
+        @mensajeFeedback
+        <button type="button" class="btn-close" @onclick="() => mensajeFeedback = null"></button>
+    </div>
+}
+
+<!-- Grilla de Productos -->
+@if (cargando)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando productos...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando catálogo de Narcisa Estudio...</p>
+    </div>
+}
+else if (errorCarga != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <i class="bi bi-x-circle me-2"></i> @errorCarga
+        <button class="btn btn-sm btn-outline-danger ms-3" @onclick="CargarProductos">Reintentar</button>
+    </div>
+}
+else if (ProductosFiltrados.Count == 0)
+{
+    <div class="text-center py-5 bg-light rounded-3">
+        <i class="bi bi-box2 text-muted display-4"></i>
+        <p class="mt-3 text-muted fs-5">No se encontraron productos que coincidan con la búsqueda.</p>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var prod in ProductosFiltrados)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 product-card">
+                    <div class="position-relative bg-light rounded-top text-center py-4 px-2" style="height: 180px; background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);">
+                        @if (!string.IsNullOrEmpty(prod.ImagenUrl))
+                        {
+                            <img src="@prod.ImagenUrl" class="card-img-top h-100 object-fit-contain" alt="@prod.Nombre" />
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                <i class="bi bi-lamp display-4 mb-2 text-secondary"></i>
+                                <span class="small">Narcisa Estudio</span>
+                            </div>
+                        }
+                        <span class="position-absolute top-0 end-0 m-2 badge @(prod.Stock > 0 ? "bg-success" : "bg-danger")">
+                            @(prod.Stock > 0 ? $"Stock: {prod.Stock}" : "Agotado")
+                        </span>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-dark mb-1">@prod.Nombre</h5>
+                        <p class="card-text text-muted small flex-grow-1">@prod.Descripcion</p>
+                        
+                        <div class="d-flex justify-content-between align-items-baseline my-3">
+                            <span class="fs-4 fw-bold text-dark">$@prod.Precio.ToString("N0")</span>
+                            <span class="text-muted small">Precio final</span>
+                        </div>
+
+                        @if (prod.Stock > 0)
+                        {
+                            var cantSeleccionada = ObtenerCantidad(prod.Id);
+                            <div class="d-flex gap-2">
+                                <div class="input-group" style="width: 105px;">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            @onclick="() => DecrementarCantidad(prod.Id)">-</button>
+                                    <input type="text" class="form-control form-control-sm text-center" 
+                                           readonly value="@cantSeleccionada" />
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            @onclick="() => IncrementarCantidad(prod.Id, prod.Stock)">+</button>
+                                </div>
+                                <button class="btn btn-dark flex-grow-1 btn-sm d-flex align-items-center justify-content-center gap-2"
+                                        disabled="@agregandoId.HasValue"
+                                        @onclick="() => AgregarAlCarrito(prod)">
+                                    @if (agregandoId == prod.Id)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-cart-plus-fill"></i>
+                                        <span>Agregar</span>
+                                    }
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100 btn-sm" disabled>Sin Stock</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<ProductoDTO> productos = new();
+    private Dictionary<int, int> cantidades = new();
+    private string filtroBusqueda = "";
+    private bool cargando = true;
+    private string? errorCarga;
+    private int? agregandoId;
+    private string? mensajeFeedback;
+    private string tipoFeedback = "success";
+
+    private List<ProductoDTO> ProductosFiltrados =>
+        string.IsNullOrWhiteSpace(filtroBusqueda)
+            ? productos
+            : productos.Where(p => p.Nombre.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                                  p.Descripcion.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase))
+                       .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProductos();
+        await CarritoState.InicializarAsync();
+    }
+
+    private async Task CargarProductos()
+    {
+        cargando = true;
+        errorCarga = null;
+        var resp = await Http.GetAsync<List<ProductoDTO>>("api/productos");
+        if (resp.Error)
+        {
+            errorCarga = resp.Mensaje ?? "No se pudo obtener el catálogo de productos.";
+        }
+        else
+        {
+            productos = resp.Respuesta ?? new List<ProductoDTO>();
+        }
+        cargando = false;
+    }
+
+    private int ObtenerCantidad(int prodId)
+    {
+        if (!cantidades.ContainsKey(prodId))
+        {
+            cantidades[prodId] = 1;
+        }
+        return cantidades[prodId];
+    }
+
+    private void IncrementarCantidad(int prodId, int maxStock)
+    {
+        int actual = ObtenerCantidad(prodId);
+        if (actual < maxStock)
+        {
+            cantidades[prodId] = actual + 1;
+        }
+    }
+
+    private void DecrementarCantidad(int prodId)
+    {
+        int actual = ObtenerCantidad(prodId);
+        if (actual > 1)
+        {
+            cantidades[prodId] = actual - 1;
+        }
+    }
+
+    private async Task AgregarAlCarrito(ProductoDTO prod)
+    {
+        agregandoId = prod.Id;
+        int cantidad = ObtenerCantidad(prod.Id);
+
+        var (exito, error) = await CarritoState.AgregarProductoAsync(prod.Id, cantidad);
+        if (exito)
+        {
+            tipoFeedback = "success";
+            mensajeFeedback = $"¡Se agregaron {cantidad} unidad(es) de '{prod.Nombre}' al carrito!";
+            cantidades[prod.Id] = 1; // reiniciamos contador local
+        }
+        else
+        {
+            tipoFeedback = "danger";
+            mensajeFeedback = error ?? "Ocurrió un error al agregar el ítem.";
+        }
+
+        agregandoId = null;
+    }
+}

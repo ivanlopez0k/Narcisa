@@ -1,0 +1,142 @@
+@page "/pedido-confirmado/{id:int}"
+@inject IHttpService Http
+@inject NavigationManager Nav
+
+<PageTitle>Pedido Confirmado — Narcisa Estudio</PageTitle>
+
+@if (cargando)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Recuperando detalles del pedido confirmado...</p>
+    </div>
+}
+else if (pedido == null)
+{
+    <div class="alert alert-warning text-center my-5 p-4 shadow-sm">
+        <i class="bi bi-exclamation-circle display-4 text-warning"></i>
+        <h4 class="mt-3 fw-bold">Pedido no encontrado</h4>
+        <p class="text-muted">No se pudo recuperar la información del pedido solicitado.</p>
+        <a href="" class="btn btn-dark mt-2">Volver al Inicio</a>
+    </div>
+}
+else
+{
+    <div class="container py-4" style="max-width: 760px;">
+        <!-- Header de Éxito -->
+        <div class="card border-0 shadow-sm text-center py-5 px-4 mb-4 bg-white">
+            <div class="card-body">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h1 class="h2 fw-bold text-dark mb-2">¡Pedido Confirmado con Éxito!</h1>
+                <p class="text-muted mb-3">
+                    Tu orden <strong>#@pedido.Id</strong> fue registrada correctamente en el sistema de Narcisa Estudio.
+                </p>
+
+                <div class="d-inline-flex align-items-center gap-2 bg-light border px-4 py-2 rounded-pill">
+                    <span class="text-muted small">Estado actual del pedido:</span>
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-1">@pedido.Estado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de la Orden -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-receipt me-2 text-primary"></i> Detalle de la Orden
+                </h5>
+                <span class="text-muted small">Fecha: @pedido.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Dirección de Entrega:
+                    </h6>
+                    <p class="text-muted mb-0 ps-3">@pedido.Direccion</p>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-2">
+                    <i class="bi bi-box-seam-fill text-secondary me-1"></i> Productos pedidos:
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in pedido.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold text-dark">@item.ProductoNombre</span>
+                                    </td>
+                                    <td class="text-center">@item.Cantidad</td>
+                                    <td class="text-end">$@item.PrecioUnitario.ToString("N0")</td>
+                                    <td class="text-end fw-bold">$@item.Subtotal.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold fs-6">Total Pedido:</td>
+                                <td class="text-end fw-bold fs-6 text-dark">$@pedido.Total.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Callout Caso de Uso 01 / Próximo Paso CU-02 -->
+        <div class="card border-primary bg-primary bg-opacity-10 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-award-fill text-primary display-6"></i>
+                    <div>
+                        <h5 class="fw-bold text-primary mb-1">Caso de Uso CU-01 Completado al 100%</h5>
+                        <p class="small text-dark mb-2">
+                            Se ejecutó el flujo completo: navegación de catálogo, agregado a carrito en base de datos, 
+                            recalculo de totales, persistencia de entrega y confirmación del pedido con reserva de stock.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            <strong>Próximo paso según el Brief</strong>: CU-02 (Procesar pago con pasarela externa Mercado Pago para pasar a estado <code>Pagado</code>).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="text-center">
+            <a href="" class="btn btn-dark px-4 py-2 fw-semibold">
+                <i class="bi bi-arrow-left me-2"></i> Volver a la Tienda
+            </a>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private PedidoDTO? pedido;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        var resp = await Http.GetAsync<PedidoDTO>($"api/pedido/{Id}");
+        if (!resp.Error && resp.Respuesta != null)
+        {
+            pedido = resp.Respuesta;
+        }
+        cargando = false;
+    }
+}
