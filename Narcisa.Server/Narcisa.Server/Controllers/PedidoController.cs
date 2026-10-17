@@ -1,11 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Narcisa.BD.Datos;
-using Narcisa.BD.Datos.Entity;
-using Narcisa.Server.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Narcisa.Repositorio.Repositorios;
+using Narcisa.Shared.DTO;
 using System.Threading.Tasks;
 
 namespace Narcisa.Server.Controllers
@@ -14,206 +9,102 @@ namespace Narcisa.Server.Controllers
     [Route("api/[controller]")]
     public class PedidoController : ControllerBase
     {
-        private const string EstadoCarrito = "Carrito";
-        private const string EstadoPendientePago = "Pendiente de pago";
+        private readonly IPedidoRepositorio _pedidoRepositorio;
 
-        private readonly AppDbContext _context;
-
-        public PedidoController(AppDbContext context)
+        public PedidoController(IPedidoRepositorio pedidoRepositorio)
         {
-            _context = context;
+            _pedidoRepositorio = pedidoRepositorio;
         }
 
-
-        [HttpPost("crear")]
-        public async Task<ActionResult<PedidoDTO>> CrearCarrito(CrearPedidoDTO dto)
+        [HttpGet("usuario/{usuarioId:int}")]
+        public async Task<ActionResult<PedidoDTO?>> ObtenerCarrito(int usuarioId)
         {
-            var usuario = await _context.Usuario.FindAsync(dto.UsuarioId);
-            if (usuario == null)
-            {
-                return BadRequest("El usuario no existe. El cliente debe estar autenticado.");
-            }
-
-            var pedido = new Pedido
-            {
-                UsuarioId = usuario.Id,
-                Estado = EstadoCarrito,
-                Direccion = "",
-                Total = 0,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.Pedidos.Add(pedido);
-            await _context.SaveChangesAsync();
-
-            return Ok(new PedidoDTO
-            {
-                Id = pedido.Id,
-                UsuarioId = pedido.UsuarioId,
-                Estado = pedido.Estado,
-                Total = pedido.Total,
-                Items = new List<ItemPedidoDTO>()
-            });
+            var carrito = await _pedidoRepositorio.ObtenerCarritoActivo(usuarioId);
+            return Ok(carrito);
         }
 
-        [HttpPost("{id}/agregar")]
-        public async Task<ActionResult<PedidoDTO>> AgregarItem(int id, AgregarItemDTO dto)
-        {
-            var pedido = await _context.Pedidos.FindAsync(id);
-            if (pedido == null)
-            {
-                return NotFound("El pedido no existe.");
-            }
-
-            if (pedido.Estado != EstadoCarrito)
-            {
-                return BadRequest("El pedido ya fue confirmado y no puede modificarse.");
-            }
-
-            if (dto.Cantidad <= 0)
-            {
-                return BadRequest("La cantidad debe ser mayor a cero.");
-            }
-
-            var producto = await _context.Productos.FindAsync(dto.ProductoId);
-            if (producto == null || !producto.Activo)
-            {
-                return BadRequest("El producto no existe o no está disponible.");
-            }
-
-
-            var existeItem = await _context.DetallesPedidos
-                .FirstOrDefaultAsync(dp => dp.PedidoId == pedido.Id && dp.ProductoId == dto.ProductoId);
-
-            int cantidadPedida = (existeItem?.Cantidad ?? 0) + dto.Cantidad;
-            if (cantidadPedida > producto.Stock)
-            {
-                return BadRequest($"No hay suficiente stock. Disponible: {producto.Stock}.");
-            }
-
-            if (existeItem != null)
-            {
-                existeItem.Cantidad = cantidadPedida;
-            }
-            else
-            {
-                _context.DetallesPedidos.Add(new DetallePedido
-                {
-                    PedidoId = pedido.Id,
-                    ProductoId = producto.Id,
-                    Cantidad = dto.Cantidad,
-                    Precio = producto.Precio
-                });
-            }
-
-            await RecalcularTotal(pedido);
-            await _context.SaveChangesAsync();
-
-            return Ok(await ObtenerResumen(pedido.Id));
-        }
-
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<PedidoDTO>> VerResumen(int id)
         {
-            var pedido = await _context.Pedidos.FindAsync(id);
+            var pedido = await _pedidoRepositorio.ObtenerResumenPedido(id);
             if (pedido == null)
             {
                 return NotFound("El pedido no existe.");
             }
 
-            return Ok(await ObtenerResumen(pedido.Id));
+            return Ok(pedido);
         }
 
-
-        [HttpPut("{id}/direccion")]
-        public async Task<ActionResult<PedidoDTO>> IngresarDireccion(int id, ConfirmarPedidoDTO dto)
+        [HttpPost("crear")]
+        public async Task<ActionResult<PedidoDTO>> CrearCarrito([FromBody] CrearPedidoDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Direccion))
+            if (dto.UsuarioId <= 0)
             {
-                return BadRequest("Debe ingresar una dirección de entrega válida.");
+                return BadRequest("El identificador de usuario es obligatorio.");
             }
 
-            var pedido = await _context.Pedidos.FindAsync(id);
-            if (pedido == null)
-            {
-                return NotFound("El pedido no existe.");
-            }
-
-            if (pedido.Estado != EstadoCarrito)
-            {
-                return BadRequest("El pedido ya fue confirmado y no puede modificarse.");
-            }
-
-            pedido.Direccion = dto.Direccion;
-            await _context.SaveChangesAsync();
-
-            return Ok(await ObtenerResumen(pedido.Id));
+            var pedido = await _pedidoRepositorio.CrearOObtenerCarrito(dto.UsuarioId);
+            return Ok(pedido);
         }
 
+        [HttpPost("{id:int}/agregar")]
+        public async Task<ActionResult<PedidoDTO>> AgregarItem(int id, [FromBody] AgregarItemDTO dto)
+        {
+            var resultado = await _pedidoRepositorio.AgregarItem(id, dto.ProductoId, dto.Cantidad);
+            if (!resultado.Exito)
+            {
+                return BadRequest(resultado.Error);
+            }
 
-        [HttpPost("{id}/confirmar")]
+            return Ok(resultado.Pedido);
+        }
+
+        [HttpPut("{id:int}/item/{productoId:int}")]
+        public async Task<ActionResult<PedidoDTO>> ActualizarCantidad(int id, int productoId, [FromQuery] int cantidad)
+        {
+            var resultado = await _pedidoRepositorio.ActualizarCantidadItem(id, productoId, cantidad);
+            if (!resultado.Exito)
+            {
+                return BadRequest(resultado.Error);
+            }
+
+            return Ok(resultado.Pedido);
+        }
+
+        [HttpDelete("{id:int}/item/{productoId:int}")]
+        public async Task<ActionResult<PedidoDTO>> EliminarItem(int id, int productoId)
+        {
+            var resultado = await _pedidoRepositorio.EliminarItem(id, productoId);
+            if (!resultado.Exito)
+            {
+                return BadRequest(resultado.Error);
+            }
+
+            return Ok(resultado.Pedido);
+        }
+
+        [HttpPut("{id:int}/direccion")]
+        public async Task<ActionResult<PedidoDTO>> IngresarDireccion(int id, [FromBody] ConfirmarPedidoDTO dto)
+        {
+            var resultado = await _pedidoRepositorio.ActualizarDireccion(id, dto.Direccion);
+            if (!resultado.Exito)
+            {
+                return BadRequest(resultado.Error);
+            }
+
+            return Ok(resultado.Pedido);
+        }
+
+        [HttpPost("{id:int}/confirmar")]
         public async Task<ActionResult<PedidoDTO>> ConfirmarPedido(int id)
         {
-            var pedido = await _context.Pedidos.FindAsync(id);
-            if (pedido == null)
+            var resultado = await _pedidoRepositorio.ConfirmarPedido(id);
+            if (!resultado.Exito)
             {
-                return NotFound("El pedido no existe.");
+                return BadRequest(resultado.Error);
             }
 
-            bool tieneItems = await _context.DetallesPedidos
-                .AnyAsync(dp => dp.PedidoId == pedido.Id);
-            if (!tieneItems)
-            {
-                return BadRequest("El carrito está vacío. Agregue productos antes de confirmar.");
-            }
-
-            if (string.IsNullOrWhiteSpace(pedido.Direccion))
-            {
-                return BadRequest("Faltan los datos de entrega. Ingrese la dirección antes de confirmar.");
-            }
-
-            pedido.Estado = EstadoPendientePago;
-            await RecalcularTotal(pedido);
-            await _context.SaveChangesAsync();
-
-            return Ok(await ObtenerResumen(pedido.Id));
-        }
-
-        private async Task RecalcularTotal(Pedido pedido)
-        {
-            pedido.Total = await _context.DetallesPedidos
-                .Where(dp => dp.PedidoId == pedido.Id)
-                .SumAsync(dp => dp.Cantidad * dp.Precio);
-        }
-
-        private async Task<PedidoDTO> ObtenerResumen(int pedidoId)
-        {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId);
-
-            var items = await _context.DetallesPedidos
-                .Include(dp => dp.Producto)
-                .Where(dp => dp.PedidoId == pedidoId)
-                .Select(dp => new ItemPedidoDTO
-                {
-                    ProductoId = dp.ProductoId,
-                    ProductoNombre = dp.Producto.Nombre,
-                    Cantidad = dp.Cantidad,
-                    PrecioUnitario = dp.Precio,
-                    Subtotal = dp.Cantidad * dp.Precio
-                })
-                .ToListAsync();
-
-            await RecalcularTotal(pedido);
-
-            return new PedidoDTO
-            {
-                Id = pedido.Id,
-                UsuarioId = pedido.UsuarioId,
-                Estado = pedido.Estado,
-                Direccion = pedido.Direccion,
-                Total = pedido.Total,
-                Items = items
-            };
+            return Ok(resultado.Pedido);
         }
     }
 }

@@ -11,6 +11,20 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
+// Repositorios (Patrón de la cátedra)
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProductoRepositorio, Narcisa.Repositorio.Repositorios.ProductoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPedidoRepositorio, Narcisa.Repositorio.Repositorios.PedidoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio, Narcisa.Repositorio.Repositorios.UsuarioRepositorio>();
+
+// Servicio HTTP para componentes Blazor
+builder.Services.AddScoped<Narcisa.Servicios.ServicioHTTP.IHttpService, Narcisa.Servicios.ServicioHTTP.HttpService>();
+builder.Services.AddScoped(sp =>
+{
+    var nav = sp.GetService<Microsoft.AspNetCore.Components.NavigationManager>();
+    var baseUri = nav?.BaseUri ?? "https://localhost:7158/";
+    return new HttpClient { BaseAddress = new Uri(baseUri) };
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
