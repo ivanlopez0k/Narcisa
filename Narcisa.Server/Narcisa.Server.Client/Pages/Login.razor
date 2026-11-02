@@ -24,7 +24,7 @@
         }
 
         <!-- Tarjeta de Acceso Rápido para el Profesor / Evaluador -->
-        <div class="card mb-4 border-0 shadow-sm" 
+        <div class="card mb-3 border-0 shadow-sm" 
              style="background: linear-gradient(135deg, #fef5ee 0%, #fae8dc 100%); border: 1px solid #f0d6c4 !important;">
             <div class="card-body p-3 d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-2">
@@ -32,13 +32,33 @@
                         <i class="bi bi-mortarboard-fill fs-6"></i>
                     </span>
                     <div>
-                        <div class="fw-bold small text-dark">Acceso Rápido Docente</div>
+                        <div class="fw-bold small text-dark">Acceso Rápido Docente (Cliente)</div>
                         <div class="text-muted" style="font-size: 0.75rem;">juan.perez@ejemplo.com / password123</div>
                     </div>
                 </div>
                 <button type="button" class="btn btn-outline-dark btn-sm px-3 py-1 shadow-sm" 
                         @onclick="AutocompletarProfesor" title="Autocompletar formulario con usuario docente">
                     <i class="bi bi-magic me-1"></i> Rellenar datos
+                </button>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Acceso Rápido Admin para el Profesor / Evaluador -->
+        <div class="card mb-4 border-0 shadow-sm" 
+             style="background: linear-gradient(135deg, #f5f0ff 0%, #ede4fb 100%); border: 1px solid #dcd0f2 !important;">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-circle p-2" style="background-color: #7c3aed; color: #fff;">
+                        <i class="bi bi-shield-lock-fill fs-6"></i>
+                    </span>
+                    <div>
+                        <div class="fw-bold small text-dark">Acceso Rápido Admin (Profesor)</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">admin@narcisa.com / admin123</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-dark btn-sm px-3 py-1 shadow-sm" 
+                        @onclick="AutocompletarAdmin" title="Autocompletar formulario con usuario administrador">
+                    <i class="bi bi-shield-check me-1"></i> Rellenar Admin
                 </button>
             </div>
         </div>
@@ -110,6 +130,13 @@
     {
         loginDto.Email = "juan.perez@ejemplo.com";
         loginDto.Password = "password123";
+        mensajeError = null;
+    }
+
+    private void AutocompletarAdmin()
+    {
+        loginDto.Email = "admin@narcisa.com";
+        loginDto.Password = "admin123";
         mensajeError = null;
     }
 

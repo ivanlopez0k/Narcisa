@@ -33,6 +33,25 @@ namespace Narcisa.Server
                 });
             }
 
+            var adminUser = db.Usuario.FirstOrDefault(u => u.email == "admin@narcisa.com");
+            if (adminUser == null)
+            {
+                db.Usuario.Add(new Usuario
+                {
+                    Nombre = "Administradora Narcisa",
+                    email = "admin@narcisa.com",
+                    password = "admin123",
+                    rol = "Admin",
+                    createdAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                adminUser.Nombre = "Administradora Narcisa";
+                adminUser.password = "admin123";
+                adminUser.rol = "Admin";
+            }
+
             if (!db.Productos.Any())
             {
                 db.Productos.AddRange(

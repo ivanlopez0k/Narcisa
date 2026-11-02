@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Narcisa.Repositorio.Repositorios;
 using Narcisa.Shared.DTO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Narcisa.Server.Controllers
@@ -105,6 +106,38 @@ namespace Narcisa.Server.Controllers
             }
 
             return Ok(resultado.Pedido);
+        }
+
+        [HttpGet("usuario/{usuarioId:int}/historial")]
+        public async Task<ActionResult<List<PedidoDTO>>> ObtenerHistorialUsuario(int usuarioId)
+        {
+            var historial = await _pedidoRepositorio.ObtenerHistorialUsuario(usuarioId);
+            return Ok(historial);
+        }
+
+        [HttpGet("admin/todos")]
+        public async Task<ActionResult<List<PedidoDTO>>> ObtenerTodosPedidos()
+        {
+            var pedidos = await _pedidoRepositorio.ObtenerTodosPedidos();
+            return Ok(pedidos);
+        }
+
+        [HttpPut("{id:int}/estado")]
+        public async Task<ActionResult<bool>> ActualizarEstadoPedido(int id, [FromQuery] string? nuevoEstado = null, [FromQuery] string? estado = null)
+        {
+            var estadoFinal = !string.IsNullOrWhiteSpace(nuevoEstado) ? nuevoEstado : estado;
+            if (string.IsNullOrWhiteSpace(estadoFinal))
+            {
+                return BadRequest("El nuevo estado es obligatorio.");
+            }
+
+            var actualizado = await _pedidoRepositorio.ActualizarEstadoPedido(id, estadoFinal.Trim());
+            if (!actualizado)
+            {
+                return NotFound("No se encontró el pedido.");
+            }
+
+            return Ok(true);
         }
     }
 }

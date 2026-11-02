@@ -1,5 +1,6 @@
 using Narcisa.BD.Datos.Entity;
 using Narcisa.Shared.DTO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Narcisa.Repositorio.Repositorios
@@ -14,5 +15,8 @@ namespace Narcisa.Repositorio.Repositorios
         Task<(bool Exito, string? Error, PedidoDTO? Pedido)> EliminarItem(int pedidoId, int productoId);
         Task<(bool Exito, string? Error, PedidoDTO? Pedido)> ActualizarDireccion(int pedidoId, string direccion);
         Task<(bool Exito, string? Error, PedidoDTO? Pedido)> ConfirmarPedido(int pedidoId);
+        Task<List<PedidoDTO>> ObtenerHistorialUsuario(int usuarioId);
+        Task<List<PedidoDTO>> ObtenerTodosPedidos();
+        Task<bool> ActualizarEstadoPedido(int pedidoId, string nuevoEstado);
     }
 }

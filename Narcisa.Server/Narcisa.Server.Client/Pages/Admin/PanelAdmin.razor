@@ -1,0 +1,1037 @@
+@page "/admin"
+@inject IHttpService Http
+@inject HttpClient HttpClient
+@inject AuthStateService AuthState
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Panel de Administración — Narcisa Estudio</PageTitle>
+
+<div class="container-fluid py-4 px-md-4" style="max-width: 1300px;">
+    <!-- Control de Acceso: Role Guard -->
+    @if (!AuthState.EstaAutenticado || AuthState.UsuarioActual?.Rol != "Admin")
+    {
+        <div class="row justify-content-center py-5">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card border-0 shadow text-center p-5" 
+                     style="background: linear-gradient(135deg, #fdfbf7 0%, #fae8dc 100%); border: 1px solid #ebdccd !important;">
+                    <div class="card-body">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm"
+                              style="width: 72px; height: 72px; background-color: #fee2e2; color: #dc2626;">
+                            <i class="bi bi-shield-x fs-1"></i>
+                        </span>
+                        <h2 class="h3 fw-bold font-serif mb-2" style="color: var(--brand-text-dark);">Acceso Restringido</h2>
+                        <p class="text-muted small mb-4">
+                            Este panel de control está reservado exclusivamente para los administradores de <strong>Narcisa Estudio</strong>.
+                            Si sos docente o evaluador, podés ingresar al instante utilizando el botón de acceso rápido de administrador en la pantalla de inicio de sesión.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="login?ReturnUrl=/admin" class="btn btn-primary px-4 py-2 shadow-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión como Admin
+                            </a>
+                            <a href="" class="btn btn-outline-dark px-3 py-2">
+                                Volver a la Tienda
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Header del Panel de Administración -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3 pb-3 border-bottom" 
+             style="border-color: #ebdccd !important;">
+            <div class="d-flex align-items-center gap-3">
+                <span class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
+                      style="width: 54px; height: 54px; background-color: #7c3aed; color: #ffffff;">
+                    <i class="bi bi-gear-wide-connected fs-3"></i>
+                </span>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h1 class="h3 fw-bold font-serif mb-0" style="color: var(--brand-text-dark);">Panel de Administración</h1>
+                        <span class="badge rounded-pill px-3 py-1" style="background-color: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; font-size: 0.75rem;">
+                            <i class="bi bi-patch-check-fill me-1"></i> ADMIN ACTIVO
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-0">Gestión de catálogo, pedidos de clientes y solicitudes de asesoramiento de Narcisa Estudio.</p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted d-none d-md-inline">Conectado como: <strong>@AuthState.UsuarioActual?.Nombre</strong></span>
+                <a href="" class="btn btn-outline-dark btn-sm shadow-sm">
+                    <i class="bi bi-shop me-1"></i> Ver Tienda
+                </a>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeFeedback))
+        {
+            <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @mensajeFeedback
+                <button type="button" class="btn-close" @onclick="() => mensajeFeedback = null"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
+                <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+            </div>
+        }
+
+        <!-- Pestañas Visuales de Navegación -->
+        <ul class="nav nav-pills gap-2 mb-4 p-2 rounded-3 shadow-sm bg-white border" style="border-color: #ebdccd !important;">
+            <li class="nav-item">
+                <button type="button" 
+                        class="nav-link px-4 py-2 fw-semibold @(tabActiva == "productos" ? "active" : "text-dark")" 
+                        style="@(tabActiva == "productos" ? "background-color: var(--brand-peach); color: white;" : "")"
+                        @onclick='() => CambiarTab("productos")'>
+                    <i class="bi bi-box-seam me-2"></i> Gestión de Productos
+                    <span class="badge rounded-pill ms-2 @(tabActiva == "productos" ? "bg-white text-dark" : "bg-light text-secondary")">
+                        @productos.Count
+                    </span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" 
+                        class="nav-link px-4 py-2 fw-semibold @(tabActiva == "pedidos" ? "active" : "text-dark")" 
+                        style="@(tabActiva == "pedidos" ? "background-color: var(--brand-peach); color: white;" : "")"
+                        @onclick='() => CambiarTab("pedidos")'>
+                    <i class="bi bi-receipt-cutoff me-2"></i> Gestión de Pedidos
+                    <span class="badge rounded-pill ms-2 @(tabActiva == "pedidos" ? "bg-white text-dark" : "bg-light text-secondary")">
+                        @pedidos.Count
+                    </span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" 
+                        class="nav-link px-4 py-2 fw-semibold @(tabActiva == "asesoramientos" ? "active" : "text-dark")" 
+                        style="@(tabActiva == "asesoramientos" ? "background-color: var(--brand-peach); color: white;" : "")"
+                        @onclick='() => CambiarTab("asesoramientos")'>
+                    <i class="bi bi-chat-square-heart me-2"></i> Solicitudes de Asesoramiento
+                    <span class="badge rounded-pill ms-2 @(tabActiva == "asesoramientos" ? "bg-white text-dark" : "bg-light text-secondary")">
+                        @asesoramientos.Count
+                    </span>
+                </button>
+            </li>
+        </ul>
+
+        @if (cargando)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" style="color: var(--brand-peach);" role="status"></div>
+                <p class="mt-3 text-muted small">Cargando datos del panel administrativo...</p>
+            </div>
+        }
+        else
+        {
+            <!-- ========================================== -->
+            <!-- TAB 1: GESTIÓN DE PRODUCTOS -->
+            <!-- ========================================== -->
+            @if (tabActiva == "productos")
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white p-3 p-md-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                         style="border-color: #f0e6dc !important;">
+                        <div>
+                            <h3 class="h5 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Catálogo de Productos</h3>
+                            <p class="text-muted small mb-0">Total: @productos.Count productos (@productos.Count(p => p.Activo) activos, @productos.Count(p => !p.Activo) pausados)</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre..." 
+                                   @bind="busquedaProducto" @bind:event="oninput" style="max-width: 230px;" />
+                            <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm text-nowrap" @onclick="AbrirModalNuevoProducto">
+                                <i class="bi bi-plus-lg me-1"></i> + Nuevo Producto
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                <tr>
+                                    <th class="ps-4">Miniatura</th>
+                                    <th>Nombre & Descripción</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var productosFiltrados = string.IsNullOrWhiteSpace(busquedaProducto)
+                                        ? productos
+                                        : productos.Where(p => p.Nombre.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase)).ToList();
+                                }
+                                @if (!productosFiltrados.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                            No se encontraron productos en el catálogo.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var prod in productosFiltrados)
+                                    {
+                                        <tr>
+                                            <td class="ps-4" style="width: 80px;">
+                                                @if (!string.IsNullOrEmpty(prod.ImagenUrl))
+                                                {
+                                                    <img src="@prod.ImagenUrl" alt="@prod.Nombre" 
+                                                         class="rounded-3 border shadow-sm" 
+                                                         style="width: 54px; height: 54px; object-fit: cover; border-color: #ebdccd !important;" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="rounded-3 d-flex align-items-center justify-content-center bg-light border text-muted" 
+                                                         style="width: 54px; height: 54px;">
+                                                        <i class="bi bi-image"></i>
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark mb-0">@prod.Nombre</div>
+                                                <div class="text-muted text-truncate small" style="max-width: 320px;">
+                                                    @prod.Descripcion
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(prod.ImagenPngUrl))
+                                                {
+                                                    <span class="badge bg-light text-secondary border mt-1" style="font-size: 0.68rem;">
+                                                        <i class="bi bi-layers me-1"></i> PNG Simulador listo
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="fw-bold" style="color: var(--brand-peach);">
+                                                $@prod.Precio.ToString("N0")
+                                            </td>
+                                            <td>
+                                                @if (prod.Stock <= 2)
+                                                {
+                                                    <span class="badge rounded-pill bg-danger">
+                                                        @prod.Stock unid. (Bajo)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge rounded-pill bg-light text-dark border">
+                                                        @prod.Stock unidades
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (prod.Activo)
+                                                {
+                                                    <span class="badge rounded-pill px-3 py-1" 
+                                                          style="background-color: #eaf5ec; color: #2b7a3e; border: 1px solid #c9e6ce; font-weight: 600;">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Activo
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge rounded-pill px-3 py-1 bg-secondary text-white">
+                                                        <i class="bi bi-pause-circle me-1"></i> Pausado
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="d-inline-flex gap-2">
+                                                    <button type="button" class="btn btn-outline-dark btn-sm shadow-sm" 
+                                                            @onclick="() => AbrirModalEditarProducto(prod)" title="Editar producto">
+                                                        <i class="bi bi-pencil-square me-1"></i> Editar
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn @(prod.Activo ? "btn-outline-danger" : "btn-outline-success") btn-sm shadow-sm" 
+                                                            @onclick="() => ToggleActivoProducto(prod)" 
+                                                            title="@(prod.Activo ? "Pausar producto" : "Activar producto")">
+                                                        <i class="bi @(prod.Activo ? "bi-eye-slash" : "bi-eye") me-1"></i>
+                                                        @(prod.Activo ? "Pausar" : "Activar")
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <!-- ========================================== -->
+            <!-- TAB 2: GESTIÓN DE PEDIDOS -->
+            <!-- ========================================== -->
+            @if (tabActiva == "pedidos")
+            {
+                <!-- Métricas Rápidas de Pedidos -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid var(--brand-peach) !important;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase">Total Pedidos</div>
+                                    <div class="h3 fw-bold font-serif mb-0 mt-1" style="color: var(--brand-text-dark);">
+                                        @pedidos.Count
+                                    </div>
+                                </div>
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-3" 
+                                      style="background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                                    <i class="bi bi-receipt fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #10b981 !important;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase">Total Recaudado</div>
+                                    <div class="h3 fw-bold font-serif mb-0 mt-1" style="color: #10b981;">
+                                        $@pedidos.Where(p => p.Estado == "Pagado" || p.Estado == "Enviado" || p.Estado == "Entregado").Sum(p => p.Total).ToString("N0")
+                                    </div>
+                                </div>
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-3" 
+                                      style="background-color: #eaf5ec; color: #2b7a3e;">
+                                    <i class="bi bi-cash-stack fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #f59e0b !important;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase">Pendientes Pago</div>
+                                    <div class="h3 fw-bold font-serif mb-0 mt-1" style="color: #b76e00;">
+                                        @pedidos.Count(p => p.Estado == "Pendiente de pago")
+                                    </div>
+                                </div>
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-3" 
+                                      style="background-color: #fff4e5; color: #b76e00;">
+                                    <i class="bi bi-hourglass-split fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #7c3aed !important;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase">Enviados / Entregados</div>
+                                    <div class="h3 fw-bold font-serif mb-0 mt-1" style="color: #7c3aed;">
+                                        @pedidos.Count(p => p.Estado == "Enviado" || p.Estado == "Entregado")
+                                    </div>
+                                </div>
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-3" 
+                                      style="background-color: #f3e8ff; color: #7c3aed;">
+                                    <i class="bi bi-truck fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Pedidos -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white p-3 p-md-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3"
+                         style="border-color: #f0e6dc !important;">
+                        <div>
+                            <h3 class="h5 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Órdenes de Clientes</h3>
+                            <p class="text-muted small mb-0">Supervisá los pedidos recibidos y cambiá su estado para mantener informados a tus compradores.</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="max-width: 220px;" @bind="filtroEstadoPedido">
+                                <option value="">Todos los estados</option>
+                                <option value="Pendiente de pago">Pendiente de pago</option>
+                                <option value="Pagado">Pagado</option>
+                                <option value="Enviado">Enviado</option>
+                                <option value="Entregado">Entregado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                <tr>
+                                    <th class="ps-4">N° Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Artículos</th>
+                                    <th>Total</th>
+                                    <th>Cambiar Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var pedidosFiltrados = string.IsNullOrWhiteSpace(filtroEstadoPedido)
+                                        ? pedidos
+                                        : pedidos.Where(p => p.Estado == filtroEstadoPedido).ToList();
+                                }
+                                @if (!pedidosFiltrados.Any())
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5 text-muted">
+                                            <i class="bi bi-clipboard-x fs-2 d-block mb-2 text-secondary"></i>
+                                            No se encontraron pedidos registrados.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var ped in pedidosFiltrados)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-bold font-serif text-dark">
+                                                #@ped.Id
+                                            </td>
+                                            <td class="small text-muted">
+                                                @ped.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold text-dark small">@(string.IsNullOrEmpty(ped.UsuarioNombre) ? "Cliente" : ped.UsuarioNombre)</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">@ped.UsuarioEmail</div>
+                                                @if (!string.IsNullOrWhiteSpace(ped.Direccion))
+                                                {
+                                                    <div class="text-muted text-truncate" style="font-size: 0.72rem; max-width: 200px;" title="@ped.Direccion">
+                                                        <i class="bi bi-geo-alt me-1 text-danger"></i> @ped.Direccion
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="small fw-semibold text-dark">@ped.Items.Count item(s)</div>
+                                                <div class="text-muted text-truncate" style="font-size: 0.75rem; max-width: 220px;">
+                                                    @string.Join(", ", ped.Items.Select(i => $"{i.Cantidad}x {i.ProductoNombre}"))
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold" style="color: var(--brand-peach);">
+                                                $@ped.Total.ToString("N0")
+                                            </td>
+                                            <td style="min-width: 180px;">
+                                                <select class="form-select form-select-sm" 
+                                                        value="@ped.Estado" 
+                                                        @onchange="e => ActualizarEstadoPedido(ped.Id, e.Value?.ToString())">
+                                                    <option value="Pendiente de pago">⏳ Pendiente de pago</option>
+                                                    <option value="Pagado">💳 Pagado</option>
+                                                    <option value="Enviado">🚚 Enviado</option>
+                                                    <option value="Entregado">🏠 Entregado</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <a href="pedido-confirmado/@ped.Id" target="_blank" class="btn btn-outline-dark btn-sm shadow-sm" title="Ver comprobante de compra">
+                                                    <i class="bi bi-eye me-1"></i> Comprobante
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <!-- ========================================== -->
+            <!-- TAB 3: GESTIÓN DE ASESORAMIENTOS -->
+            <!-- ========================================== -->
+            @if (tabActiva == "asesoramientos")
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white p-3 p-md-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3"
+                         style="border-color: #f0e6dc !important;">
+                        <div>
+                            <h3 class="h5 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Solicitudes de Asesoramiento Personalizado</h3>
+                            <p class="text-muted small mb-0">Total: @asesoramientos.Count solicitudes (@asesoramientos.Count(a => a.Estado == "Nueva") nuevas, @asesoramientos.Count(a => a.Estado == "En proceso") en proceso)</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" style="max-width: 200px;" @bind="filtroEstadoAsesoramiento">
+                                <option value="">Todos los estados</option>
+                                <option value="Nueva">Nuevas</option>
+                                <option value="En proceso">En proceso</option>
+                                <option value="Respondida">Respondidas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                <tr>
+                                    <th class="ps-4">ID</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Requerimiento / Espacio</th>
+                                    <th>Disponibilidad</th>
+                                    <th class="pe-4">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var asesoramientosFiltrados = string.IsNullOrWhiteSpace(filtroEstadoAsesoramiento)
+                                        ? asesoramientos
+                                        : asesoramientos.Where(a => a.Estado == filtroEstadoAsesoramiento).ToList();
+                                }
+                                @if (!asesoramientosFiltrados.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="bi bi-chat-left-dots fs-2 d-block mb-2 text-secondary"></i>
+                                            No se registraron solicitudes de asesoramiento aún.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var sol in asesoramientosFiltrados)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-bold font-serif text-dark">
+                                                #@sol.Id
+                                            </td>
+                                            <td class="small text-muted">
+                                                @sol.CreatedAt.ToString("dd/MM/yyyy")
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold text-dark small">@(string.IsNullOrEmpty(sol.UsuarioNombre) ? "Cliente Narcisa" : sol.UsuarioNombre)</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">@sol.UsuarioEmail</div>
+                                            </td>
+                                            <td>
+                                                <div class="small text-dark" style="max-width: 380px;">
+                                                    @sol.Descripcion
+                                                </div>
+                                            </td>
+                                            <td class="small text-muted" style="max-width: 200px;">
+                                                <i class="bi bi-clock me-1 text-secondary"></i> @sol.Disponibilidad
+                                            </td>
+                                            <td class="pe-4" style="min-width: 170px;">
+                                                <select class="form-select form-select-sm" 
+                                                        value="@sol.Estado" 
+                                                        @onchange="e => ActualizarEstadoAsesoramiento(sol.Id, e.Value?.ToString())">
+                                                    <option value="Nueva">🌱 Nueva</option>
+                                                    <option value="En proceso">⏳ En proceso</option>
+                                                    <option value="Respondida">✅ Respondida</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL DE CREACIÓN / EDICIÓN DE PRODUCTO -->
+<!-- ============================================================ -->
+@if (mostrarModalProducto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(30, 25, 23, 0.6); backdrop-filter: blur(2px);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-light p-4 border-bottom" style="border-color: #ebdccd !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center p-2" 
+                              style="background-color: var(--brand-peach-light); color: var(--brand-peach); width: 38px; height: 38px;">
+                            <i class="bi bi-box-seam fs-5"></i>
+                        </span>
+                        <h5 class="modal-title fw-bold font-serif mb-0" style="color: var(--brand-text-dark);">
+                            @(productoForm.Id == 0 ? "Nuevo Producto para Catálogo" : $"Editar Producto #{productoForm.Id}")
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="CerrarModalProducto" disabled="@guardandoProducto"></button>
+                </div>
+
+                <EditForm Model="@productoForm" OnValidSubmit="GuardarProducto">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body p-4">
+                        @if (!string.IsNullOrEmpty(errorModal))
+                        {
+                            <div class="alert alert-danger py-2 small border-0 rounded-3 mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> @errorModal
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-8">
+                                <label class="form-label fw-semibold small text-dark">Nombre del Producto (*)</label>
+                                <InputText @bind-Value="productoForm.Nombre" class="form-control" placeholder="Ej: Espejo circular marco dorado" />
+                                <ValidationMessage For="@(() => productoForm.Nombre)" class="text-danger small mt-1" />
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="form-label fw-semibold small text-dark">Estado en Tienda</label>
+                                <div class="form-check form-switch mt-2">
+                                    <InputCheckbox @bind-Value="productoForm.Activo" class="form-check-input" id="checkActivo" role="switch" />
+                                    <label class="form-check-label small fw-semibold" for="checkActivo">
+                                        @(productoForm.Activo ? "Producto Activo" : "Pausado (Oculto)")
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small text-dark">Descripción (*)</label>
+                                <InputTextArea @bind-Value="productoForm.Descripcion" class="form-control" rows="3" 
+                                               placeholder="Breve descripción boutique del material, dimensiones y estilo..." />
+                                <ValidationMessage For="@(() => productoForm.Descripcion)" class="text-danger small mt-1" />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold small text-dark">Precio en Pesos ARS (*)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">$</span>
+                                    <InputNumber @bind-Value="productoForm.Precio" class="form-control" />
+                                </div>
+                                <ValidationMessage For="@(() => productoForm.Precio)" class="text-danger small mt-1" />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold small text-dark">Stock Disponible (*)</label>
+                                <InputNumber @bind-Value="productoForm.Stock" class="form-control" />
+                                <ValidationMessage For="@(() => productoForm.Stock)" class="text-danger small mt-1" />
+                            </div>
+
+                            <!-- Foto de Catálogo -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small text-dark">Foto Principal de Catálogo (*)</label>
+                                <div class="input-group mb-2">
+                                    <InputText @bind-Value="productoForm.ImagenUrl" class="form-control" 
+                                               placeholder="URL de imagen (https://... o /uploads/productos/...)" />
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="btn btn-outline-secondary btn-sm px-3 shadow-sm mb-0">
+                                        <i class="bi bi-cloud-upload me-1"></i>
+                                        @(subiendoFotoCatalogo ? "Subiendo archivo..." : "Subir archivo de mi equipo")
+                                        <InputFile OnChange="SubirFotoCatalogo" class="d-none" accept=".jpg,.jpeg,.png,.webp" disabled="@subiendoFotoCatalogo" />
+                                    </label>
+                                    @if (!string.IsNullOrEmpty(productoForm.ImagenUrl))
+                                    {
+                                        <img src="@productoForm.ImagenUrl" alt="Vista previa" 
+                                             class="rounded-3 border shadow-sm" style="width: 44px; height: 44px; object-fit: cover;" />
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Foto PNG Recortada para Simulador -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small text-dark">Foto PNG Transparente (Opcional, para Simulador 2D)</label>
+                                <div class="input-group mb-2">
+                                    <InputText @bind-Value="productoForm.ImagenPngUrl" class="form-control" 
+                                               placeholder="URL de imagen PNG con fondo transparente (opcional)" />
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="btn btn-outline-secondary btn-sm px-3 shadow-sm mb-0">
+                                        <i class="bi bi-layers me-1"></i>
+                                        @(subiendoFotoPng ? "Subiendo archivo..." : "Subir PNG transparente")
+                                        <InputFile OnChange="SubirFotoPng" class="d-none" accept=".png,.webp" disabled="@subiendoFotoPng" />
+                                    </label>
+                                    @if (!string.IsNullOrEmpty(productoForm.ImagenPngUrl))
+                                    {
+                                        <img src="@productoForm.ImagenPngUrl" alt="Vista previa PNG" 
+                                             class="rounded-3 border shadow-sm bg-light" style="width: 44px; height: 44px; object-fit: contain;" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light p-3 border-top" style="border-color: #ebdccd !important;">
+                        <button type="button" class="btn btn-outline-secondary px-3" @onclick="CerrarModalProducto" disabled="@guardandoProducto">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm" disabled="@guardandoProducto">
+                            @if (guardandoProducto)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Guardando producto...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span>@(productoForm.Id == 0 ? "Crear Producto" : "Guardar Cambios")</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string tabActiva = "productos";
+    private bool cargando = true;
+    private string? mensajeFeedback;
+    private string? mensajeError;
+
+    // Listas de datos
+    private List<ProductoDTO> productos = new();
+    private List<PedidoDTO> pedidos = new();
+    private List<AsesoramientoDTO> asesoramientos = new();
+
+    // Filtros y búsquedas
+    private string busquedaProducto = "";
+    private string filtroEstadoPedido = "";
+    private string filtroEstadoAsesoramiento = "";
+
+    // Modal de producto
+    private bool mostrarModalProducto = false;
+    private ProductoDTO productoForm = new();
+    private bool guardandoProducto = false;
+    private bool subiendoFotoCatalogo = false;
+    private bool subiendoFotoPng = false;
+    private string? errorModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnChange += HandleAuthStateChange;
+
+        if (AuthState.EstaAutenticado && AuthState.UsuarioActual?.Rol == "Admin")
+        {
+            await CargarTodo();
+        }
+        else
+        {
+            cargando = false;
+        }
+    }
+
+    private async void HandleAuthStateChange()
+    {
+        if (AuthState.EstaAutenticado && AuthState.UsuarioActual?.Rol == "Admin")
+        {
+            await CargarTodo();
+        }
+        else
+        {
+            cargando = false;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void CambiarTab(string tab)
+    {
+        tabActiva = tab;
+        mensajeFeedback = null;
+        mensajeError = null;
+    }
+
+    private async Task CargarTodo()
+    {
+        cargando = true;
+        mensajeError = null;
+
+        try
+        {
+            var pTask = Http.GetAsync<List<ProductoDTO>>("api/productos/admin");
+            var oTask = Http.GetAsync<List<PedidoDTO>>("api/pedido/admin/todos");
+            var aTask = Http.GetAsync<List<AsesoramientoDTO>>("api/asesoramiento");
+
+            await Task.WhenAll(pTask, oTask, aTask);
+
+            var pResp = await pTask;
+            if (!pResp.Error && pResp.Respuesta != null) productos = pResp.Respuesta;
+
+            var oResp = await oTask;
+            if (!oResp.Error && oResp.Respuesta != null) pedidos = oResp.Respuesta;
+
+            var aResp = await aTask;
+            if (!aResp.Error && aResp.Respuesta != null) asesoramientos = aResp.Respuesta;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al recuperar datos administrativos: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    // ==========================================
+    // ACCIONES DE PRODUCTOS
+    // ==========================================
+    private void AbrirModalNuevoProducto()
+    {
+        productoForm = new ProductoDTO
+        {
+            Id = 0,
+            Nombre = "",
+            Descripcion = "",
+            Precio = 0m,
+            Stock = 5,
+            Activo = true,
+            ImagenUrl = "",
+            ImagenPngUrl = null
+        };
+        errorModal = null;
+        mostrarModalProducto = true;
+    }
+
+    private void AbrirModalEditarProducto(ProductoDTO p)
+    {
+        productoForm = new ProductoDTO
+        {
+            Id = p.Id,
+            Nombre = p.Nombre,
+            Descripcion = p.Descripcion,
+            Precio = p.Precio,
+            Stock = p.Stock,
+            Activo = p.Activo,
+            ImagenUrl = p.ImagenUrl,
+            ImagenPngUrl = p.ImagenPngUrl
+        };
+        errorModal = null;
+        mostrarModalProducto = true;
+    }
+
+    private void CerrarModalProducto()
+    {
+        mostrarModalProducto = false;
+        errorModal = null;
+    }
+
+    private async Task GuardarProducto()
+    {
+        if (string.IsNullOrWhiteSpace(productoForm.ImagenUrl))
+        {
+            errorModal = "Debés ingresar o subir una foto principal de catálogo.";
+            return;
+        }
+
+        guardandoProducto = true;
+        errorModal = null;
+
+        try
+        {
+            if (productoForm.Id == 0)
+            {
+                var resp = await Http.PostAsync<ProductoDTO, ProductoDTO>("api/productos", productoForm);
+                if (resp.Error || resp.Respuesta == null)
+                {
+                    errorModal = resp.Mensaje ?? "No se pudo crear el producto.";
+                }
+                else
+                {
+                    mensajeFeedback = $"Producto '{resp.Respuesta.Nombre}' creado exitosamente con ID #{resp.Respuesta.Id}.";
+                    mostrarModalProducto = false;
+                    await RecargarProductos();
+                }
+            }
+            else
+            {
+                var resp = await Http.PutAsync<ProductoDTO, ProductoDTO>($"api/productos/{productoForm.Id}", productoForm);
+                if (resp.Error || resp.Respuesta == null)
+                {
+                    errorModal = resp.Mensaje ?? "No se pudo actualizar el producto.";
+                }
+                else
+                {
+                    mensajeFeedback = $"Producto '{resp.Respuesta.Nombre}' actualizado correctamente.";
+                    mostrarModalProducto = false;
+                    await RecargarProductos();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorModal = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            guardandoProducto = false;
+        }
+    }
+
+    private async Task ToggleActivoProducto(ProductoDTO p)
+    {
+        var nuevoEstado = !p.Activo;
+        try
+        {
+            var res = await HttpClient.PutAsync($"api/productos/{p.Id}/activo?activo={nuevoEstado}", null);
+            if (res.IsSuccessStatusCode)
+            {
+                p.Activo = nuevoEstado;
+                mensajeFeedback = $"Estado del producto '{p.Nombre}' actualizado a {(nuevoEstado ? "Activo" : "Pausado")}.";
+            }
+            else
+            {
+                mensajeError = "No se pudo cambiar el estado del producto.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al cambiar estado: {ex.Message}";
+        }
+    }
+
+    private async Task RecargarProductos()
+    {
+        var resp = await Http.GetAsync<List<ProductoDTO>>("api/productos/admin");
+        if (!resp.Error && resp.Respuesta != null)
+        {
+            productos = resp.Respuesta;
+        }
+    }
+
+    private async Task SubirFotoCatalogo(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        subiendoFotoCatalogo = true;
+        errorModal = null;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "file", file.Name);
+
+            var resp = await HttpClient.PostAsync("api/productos/upload-imagen", content);
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<UploadResult>();
+                if (!string.IsNullOrEmpty(result?.Url))
+                {
+                    productoForm.ImagenUrl = result.Url;
+                }
+            }
+            else
+            {
+                errorModal = "Error al subir la imagen al servidor.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorModal = $"Error al subir imagen: {ex.Message}";
+        }
+        finally
+        {
+            subiendoFotoCatalogo = false;
+        }
+    }
+
+    private async Task SubirFotoPng(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        subiendoFotoPng = true;
+        errorModal = null;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "file", file.Name);
+
+            var resp = await HttpClient.PostAsync("api/productos/upload-imagen", content);
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<UploadResult>();
+                if (!string.IsNullOrEmpty(result?.Url))
+                {
+                    productoForm.ImagenPngUrl = result.Url;
+                }
+            }
+            else
+            {
+                errorModal = "Error al subir imagen PNG.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorModal = $"Error al subir imagen PNG: {ex.Message}";
+        }
+        finally
+        {
+            subiendoFotoPng = false;
+        }
+    }
+
+    // ==========================================
+    // ACCIONES DE PEDIDOS
+    // ==========================================
+    private async Task ActualizarEstadoPedido(int pedidoId, string? nuevoEstado)
+    {
+        if (string.IsNullOrWhiteSpace(nuevoEstado)) return;
+
+        try
+        {
+            var res = await HttpClient.PutAsync($"api/pedido/{pedidoId}/estado?nuevoEstado={Uri.EscapeDataString(nuevoEstado)}", null);
+            if (res.IsSuccessStatusCode)
+            {
+                var p = pedidos.FirstOrDefault(x => x.Id == pedidoId);
+                if (p != null) p.Estado = nuevoEstado;
+                mensajeFeedback = $"Estado del pedido #{pedidoId} actualizado a '{nuevoEstado}'.";
+            }
+            else
+            {
+                mensajeError = $"No se pudo actualizar el estado del pedido #{pedidoId}.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al cambiar estado del pedido: {ex.Message}";
+        }
+    }
+
+    // ==========================================
+    // ACCIONES DE ASESORAMIENTOS
+    // ==========================================
+    private async Task ActualizarEstadoAsesoramiento(int asesoramientoId, string? nuevoEstado)
+    {
+        if (string.IsNullOrWhiteSpace(nuevoEstado)) return;
+
+        try
+        {
+            var res = await HttpClient.PutAsync($"api/asesoramiento/{asesoramientoId}/estado?nuevoEstado={Uri.EscapeDataString(nuevoEstado)}", null);
+            if (res.IsSuccessStatusCode)
+            {
+                var a = asesoramientos.FirstOrDefault(x => x.Id == asesoramientoId);
+                if (a != null) a.Estado = nuevoEstado;
+                mensajeFeedback = $"Estado de la solicitud de asesoramiento #{asesoramientoId} actualizado a '{nuevoEstado}'.";
+            }
+            else
+            {
+                mensajeError = $"No se pudo actualizar el estado de la solicitud #{asesoramientoId}.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al actualizar solicitud: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= HandleAuthStateChange;
+    }
+
+    private class UploadResult
+    {
+        public string? Url { get; set; }
+    }
+}

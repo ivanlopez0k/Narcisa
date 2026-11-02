@@ -332,5 +332,152 @@ namespace Narcisa.Repositorio.Repositorios
                 .Where(dp => dp.PedidoId == pedido.Id)
                 .SumAsync(dp => dp.Cantidad * dp.Precio);
         }
+
+        public async Task<List<PedidoDTO>> ObtenerHistorialUsuario(int usuarioId)
+        {
+            var validStates = new[] { "Pagado", "Pendiente de pago", "Enviado", "Entregado" };
+
+            var pedidos = await context.Pedidos
+                .Include(p => p.Detalles)
+                    .ThenInclude(dp => dp.Producto)
+                .Include(p => p.Usuario)
+                .Where(p => p.UsuarioId == usuarioId && validStates.Contains(p.Estado))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var pedidoIds = pedidos.Select(p => p.Id).ToList();
+            var pagos = await context.Pagos
+                .Where(p => pedidoIds.Contains(p.PedidoId))
+                .OrderByDescending(p => p.Fecha)
+                .ToListAsync();
+
+            var resultado = new List<PedidoDTO>();
+
+            foreach (var p in pedidos)
+            {
+                var items = p.Detalles.Select(dp => new ItemPedidoDTO
+                {
+                    ProductoId = dp.ProductoId,
+                    ProductoNombre = dp.Producto?.Nombre ?? "Producto",
+                    ImagenUrl = dp.Producto?.ImagenUrl ?? "",
+                    Cantidad = dp.Cantidad,
+                    PrecioUnitario = dp.Precio,
+                    Subtotal = dp.Cantidad * dp.Precio
+                }).ToList();
+
+                var totalCalculado = p.Total > 0 ? p.Total : items.Sum(i => i.Subtotal);
+
+                var pago = pagos.FirstOrDefault(pg => pg.PedidoId == p.Id);
+                PagoDTO? pagoDto = null;
+                if (pago != null)
+                {
+                    pagoDto = new PagoDTO
+                    {
+                        Id = pago.Id,
+                        Metodo = pago.Metodo,
+                        Estado = pago.Estado,
+                        Referencia = pago.Referencia,
+                        Fecha = pago.Fecha,
+                        PedidoId = pago.PedidoId,
+                        Total = totalCalculado
+                    };
+                }
+
+                resultado.Add(new PedidoDTO
+                {
+                    Id = p.Id,
+                    UsuarioId = p.UsuarioId,
+                    UsuarioNombre = p.Usuario?.Nombre,
+                    UsuarioEmail = p.Usuario?.email,
+                    Estado = p.Estado,
+                    Direccion = p.Direccion ?? "",
+                    Total = totalCalculado,
+                    CreatedAt = p.CreatedAt,
+                    Pago = pagoDto,
+                    Items = items
+                });
+            }
+
+            return resultado;
+        }
+
+        public async Task<List<PedidoDTO>> ObtenerTodosPedidos()
+        {
+            var pedidos = await context.Pedidos
+                .Include(p => p.Detalles)
+                    .ThenInclude(dp => dp.Producto)
+                .Include(p => p.Usuario)
+                .Where(p => p.Estado != EstadoCarrito)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var pedidoIds = pedidos.Select(p => p.Id).ToList();
+            var pagos = await context.Pagos
+                .Where(p => pedidoIds.Contains(p.PedidoId))
+                .OrderByDescending(p => p.Fecha)
+                .ToListAsync();
+
+            var resultado = new List<PedidoDTO>();
+
+            foreach (var p in pedidos)
+            {
+                var items = p.Detalles.Select(dp => new ItemPedidoDTO
+                {
+                    ProductoId = dp.ProductoId,
+                    ProductoNombre = dp.Producto?.Nombre ?? "Producto",
+                    ImagenUrl = dp.Producto?.ImagenUrl ?? "",
+                    Cantidad = dp.Cantidad,
+                    PrecioUnitario = dp.Precio,
+                    Subtotal = dp.Cantidad * dp.Precio
+                }).ToList();
+
+                var totalCalculado = p.Total > 0 ? p.Total : items.Sum(i => i.Subtotal);
+
+                var pago = pagos.FirstOrDefault(pg => pg.PedidoId == p.Id);
+                PagoDTO? pagoDto = null;
+                if (pago != null)
+                {
+                    pagoDto = new PagoDTO
+                    {
+                        Id = pago.Id,
+                        Metodo = pago.Metodo,
+                        Estado = pago.Estado,
+                        Referencia = pago.Referencia,
+                        Fecha = pago.Fecha,
+                        PedidoId = pago.PedidoId,
+                        Total = totalCalculado
+                    };
+                }
+
+                resultado.Add(new PedidoDTO
+                {
+                    Id = p.Id,
+                    UsuarioId = p.UsuarioId,
+                    UsuarioNombre = p.Usuario?.Nombre,
+                    UsuarioEmail = p.Usuario?.email,
+                    Estado = p.Estado,
+                    Direccion = p.Direccion ?? "",
+                    Total = totalCalculado,
+                    CreatedAt = p.CreatedAt,
+                    Pago = pagoDto,
+                    Items = items
+                });
+            }
+
+            return resultado;
+        }
+
+        public async Task<bool> ActualizarEstadoPedido(int pedidoId, string nuevoEstado)
+        {
+            var pedido = await context.Pedidos.FindAsync(pedidoId);
+            if (pedido == null)
+            {
+                return false;
+            }
+
+            pedido.Estado = nuevoEstado;
+            await context.SaveChangesAsync();
+            return true;
+        }
     }
 }

@@ -53,5 +53,75 @@ namespace Narcisa.Repositorio.Repositorios
                 Activo = p.Activo
             };
         }
+
+        public async Task<List<ProductoDTO>> ObtenerTodosAdmin()
+        {
+            return await context.Productos
+                .OrderByDescending(p => p.Id)
+                .Select(p => new ProductoDTO
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion,
+                    Precio = p.Precio,
+                    Stock = p.Stock,
+                    ImagenUrl = p.ImagenUrl,
+                    ImagenPngUrl = p.ImagenPngUrl,
+                    Activo = p.Activo
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ProductoDTO> GuardarProducto(ProductoDTO dto)
+        {
+            Producto? p = null;
+            if (dto.Id > 0)
+            {
+                p = await context.Productos.FindAsync(dto.Id);
+            }
+
+            if (p == null)
+            {
+                p = new Producto
+                {
+                    Nombre = dto.Nombre,
+                    Descripcion = dto.Descripcion,
+                    Precio = dto.Precio,
+                    Stock = dto.Stock,
+                    ImagenUrl = dto.ImagenUrl,
+                    ImagenPngUrl = dto.ImagenPngUrl,
+                    Activo = dto.Activo
+                };
+                await context.Productos.AddAsync(p);
+            }
+            else
+            {
+                p.Nombre = dto.Nombre;
+                p.Descripcion = dto.Descripcion;
+                p.Precio = dto.Precio;
+                p.Stock = dto.Stock;
+                p.ImagenUrl = dto.ImagenUrl;
+                p.ImagenPngUrl = dto.ImagenPngUrl;
+                p.Activo = dto.Activo;
+            }
+
+            await context.SaveChangesAsync();
+
+            dto.Id = p.Id;
+            return dto;
+        }
+
+        public async Task<bool> CambiarEstadoActivo(int id, bool activo)
+        {
+            var p = await context.Productos.FindAsync(id);
+            if (p == null)
+            {
+                return false;
+            }
+
+            p.Activo = activo;
+            await context.SaveChangesAsync();
+            return true;
+        }
     }
 }

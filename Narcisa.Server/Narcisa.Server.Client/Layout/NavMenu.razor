@@ -69,6 +69,30 @@
             </NavLink>
         </div>
 
+        <div class="nav-item">
+            <NavLink class="nav-link" href="mis-pedidos">
+                <i class="bi bi-bag-check me-2 fs-5 text-secondary"></i>
+                <span>Mis Pedidos</span>
+            </NavLink>
+        </div>
+
+        @if (AuthState.UsuarioActual?.Rol == "Admin")
+        {
+            <div class="nav-item my-1">
+                <NavLink class="nav-link d-flex align-items-center justify-content-between text-white rounded-3 mx-2 px-3 py-2 shadow-sm" 
+                         href="admin" 
+                         style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                    <span class="d-flex align-items-center">
+                        <i class="bi bi-gear-wide-connected me-2 fs-5 text-white"></i>
+                        <span class="fw-bold">Panel Administrador</span>
+                    </span>
+                    <span class="badge bg-white text-dark rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700;">
+                        ADMIN
+                    </span>
+                </NavLink>
+            </div>
+        }
+
         <div class="my-3 mx-3" style="border-top: 1px solid #ebdccd;"></div>
 
         @if (AuthState.EstaAutenticado)

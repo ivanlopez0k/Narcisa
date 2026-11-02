@@ -9,5 +9,8 @@ namespace Narcisa.Repositorio.Repositorios
     {
         Task<List<ProductoDTO>> ObtenerCatalogoActivo();
         Task<ProductoDTO?> ObtenerDetalle(int id);
+        Task<List<ProductoDTO>> ObtenerTodosAdmin();
+        Task<ProductoDTO> GuardarProducto(ProductoDTO dto);
+        Task<bool> CambiarEstadoActivo(int id, bool activo);
     }
 }

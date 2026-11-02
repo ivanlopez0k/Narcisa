@@ -7,6 +7,8 @@ namespace Narcisa.Shared.DTO
     {
         public int Id { get; set; }
         public int UsuarioId { get; set; }
+        public string? UsuarioNombre { get; set; }
+        public string? UsuarioEmail { get; set; }
         public string Estado { get; set; } = "";
         public string Direccion { get; set; } = "";
         public decimal Total { get; set; }
