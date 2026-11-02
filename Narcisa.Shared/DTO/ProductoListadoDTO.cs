@@ -7,6 +7,7 @@ namespace Narcisa.Shared.DTO
         public decimal Precio { get; set; }
         public int Stock { get; set; }
         public string ImagenUrl { get; set; } = "";
+        public string? ImagenPngUrl { get; set; }
         public string Descripcion { get; set; } = "";
     }
 }

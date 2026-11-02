@@ -20,6 +20,7 @@ namespace Narcisa.Shared.DTO
         public int Stock { get; set; }
 
         public string ImagenUrl { get; set; } = "";
+        public string? ImagenPngUrl { get; set; }
         public bool Activo { get; set; } = true;
     }
 }

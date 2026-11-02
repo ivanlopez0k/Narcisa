@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProductoRepositorio, Narcisa.Repositorio.Repositorios.ProductoRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPedidoRepositorio, Narcisa.Repositorio.Repositorios.PedidoRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio, Narcisa.Repositorio.Repositorios.UsuarioRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProyectoRepositorio, Narcisa.Repositorio.Repositorios.ProyectoRepositorio>();
 
 // Servicio HTTP y Estado para componentes Blazor
 builder.Services.AddScoped<Narcisa.Servicios.ServicioHTTP.IHttpService, Narcisa.Servicios.ServicioHTTP.HttpService>();
@@ -69,6 +70,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

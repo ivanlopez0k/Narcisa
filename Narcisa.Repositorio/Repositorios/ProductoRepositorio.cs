@@ -27,6 +27,7 @@ namespace Narcisa.Repositorio.Repositorios
                     Precio = p.Precio,
                     Stock = p.Stock,
                     ImagenUrl = p.ImagenUrl,
+                    ImagenPngUrl = p.ImagenPngUrl,
                     Activo = p.Activo
                 })
                 .ToListAsync();
@@ -48,6 +49,7 @@ namespace Narcisa.Repositorio.Repositorios
                 Precio = p.Precio,
                 Stock = p.Stock,
                 ImagenUrl = p.ImagenUrl,
+                ImagenPngUrl = p.ImagenPngUrl,
                 Activo = p.Activo
             };
         }

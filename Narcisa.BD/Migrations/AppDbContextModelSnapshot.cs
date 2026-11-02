@@ -164,6 +164,9 @@ namespace Narcisa.BD.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImagenPngUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ImagenUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -285,7 +288,7 @@ namespace Narcisa.BD.Migrations
             modelBuilder.Entity("Narcisa.BD.Datos.Entity.DetallePedido", b =>
                 {
                     b.HasOne("Narcisa.BD.Datos.Entity.Pedido", "Pedido")
-                        .WithMany()
+                        .WithMany("Detalles")
                         .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -343,7 +346,7 @@ namespace Narcisa.BD.Migrations
                         .IsRequired();
 
                     b.HasOne("Narcisa.BD.Datos.Entity.Proyecto", "Proyecto")
-                        .WithMany()
+                        .WithMany("Productos")
                         .HasForeignKey("ProyectoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -351,6 +354,16 @@ namespace Narcisa.BD.Migrations
                     b.Navigation("Producto");
 
                     b.Navigation("Proyecto");
+                });
+
+            modelBuilder.Entity("Narcisa.BD.Datos.Entity.Pedido", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Narcisa.BD.Datos.Entity.Proyecto", b =>
+                {
+                    b.Navigation("Productos");
                 });
 #pragma warning restore 612, 618
         }
