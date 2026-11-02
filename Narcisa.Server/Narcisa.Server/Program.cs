@@ -17,6 +17,7 @@ builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPedidoRepositorio, 
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPagoRepositorio, Narcisa.Repositorio.Repositorios.PagoRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio, Narcisa.Repositorio.Repositorios.UsuarioRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProyectoRepositorio, Narcisa.Repositorio.Repositorios.ProyectoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IAsesoramientoRepositorio, Narcisa.Repositorio.Repositorios.AsesoramientoRepositorio>();
 
 // Servicio HTTP y Estado para componentes Blazor
 builder.Services.AddScoped<Narcisa.Servicios.ServicioHTTP.IHttpService, Narcisa.Servicios.ServicioHTTP.HttpService>();
