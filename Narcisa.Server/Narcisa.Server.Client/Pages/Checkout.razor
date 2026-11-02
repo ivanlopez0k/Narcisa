@@ -234,10 +234,10 @@ else
             return;
         }
 
-        // 3. Limpiar estado local del carrito y navegar a confirmación
+        // 3. Limpiar estado local del carrito y navegar a la pasarela de pago
         CarritoState.LimpiarCarritoLocal();
         procesando = false;
-        Nav.NavigateTo($"pedido-confirmado/{pedidoId}");
+        Nav.NavigateTo($"pago/{pedidoId}");
     }
 
     public void Dispose()

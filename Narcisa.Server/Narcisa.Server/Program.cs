@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 // Repositorios (Patrón de la cátedra)
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProductoRepositorio, Narcisa.Repositorio.Repositorios.ProductoRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPedidoRepositorio, Narcisa.Repositorio.Repositorios.PedidoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPagoRepositorio, Narcisa.Repositorio.Repositorios.PagoRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio, Narcisa.Repositorio.Repositorios.UsuarioRepositorio>();
 builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProyectoRepositorio, Narcisa.Repositorio.Repositorios.ProyectoRepositorio>();
 

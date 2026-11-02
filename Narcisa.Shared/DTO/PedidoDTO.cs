@@ -11,6 +11,7 @@ namespace Narcisa.Shared.DTO
         public string Direccion { get; set; } = "";
         public decimal Total { get; set; }
         public DateTime CreatedAt { get; set; }
+        public PagoDTO? Pago { get; set; }
         public List<ItemPedidoDTO> Items { get; set; } = new List<ItemPedidoDTO>();
     }
 }

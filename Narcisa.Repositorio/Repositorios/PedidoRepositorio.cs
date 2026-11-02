@@ -57,6 +57,25 @@ namespace Narcisa.Repositorio.Repositorios
 
             pedido.Total = items.Sum(i => i.Subtotal);
 
+            var pago = await context.Pagos
+                .OrderByDescending(p => p.Fecha)
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+
+            PagoDTO? pagoDto = null;
+            if (pago != null)
+            {
+                pagoDto = new PagoDTO
+                {
+                    Id = pago.Id,
+                    Metodo = pago.Metodo,
+                    Estado = pago.Estado,
+                    Referencia = pago.Referencia,
+                    Fecha = pago.Fecha,
+                    PedidoId = pago.PedidoId,
+                    Total = pedido.Total
+                };
+            }
+
             return new PedidoDTO
             {
                 Id = pedido.Id,
@@ -65,6 +84,7 @@ namespace Narcisa.Repositorio.Repositorios
                 Direccion = pedido.Direccion ?? "",
                 Total = pedido.Total,
                 CreatedAt = pedido.CreatedAt,
+                Pago = pagoDto,
                 Items = items
             };
         }
