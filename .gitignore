@@ -366,3 +366,8 @@ FodyWeavers.xsd
 # Documentation & temporary extractions
 *.pdf
 page_*.png
+
+# Uploads folder
+Narcisa.Server/Narcisa.Server/wwwroot/uploads/*
+!Narcisa.Server/Narcisa.Server/wwwroot/uploads/**/.gitkeep
+
