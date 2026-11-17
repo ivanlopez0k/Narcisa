@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,8 +11,7 @@ namespace Narcisa.BD.Datos.Entity
         public decimal Precio { get; set; }
         public int Stock { get; set; }
         public string ImagenUrl { get; set; }
+        public string? ImagenPngUrl { get; set; }
         public bool Activo { get; set; }
-
-    
     }
 }
