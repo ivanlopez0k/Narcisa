@@ -11,6 +11,25 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
+
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProductoRepositorio, Narcisa.Repositorio.Repositorios.ProductoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPedidoRepositorio, Narcisa.Repositorio.Repositorios.PedidoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IPagoRepositorio, Narcisa.Repositorio.Repositorios.PagoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IUsuarioRepositorio, Narcisa.Repositorio.Repositorios.UsuarioRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IProyectoRepositorio, Narcisa.Repositorio.Repositorios.ProyectoRepositorio>();
+builder.Services.AddScoped<Narcisa.Repositorio.Repositorios.IAsesoramientoRepositorio, Narcisa.Repositorio.Repositorios.AsesoramientoRepositorio>();
+
+
+builder.Services.AddScoped<Narcisa.Servicios.ServicioHTTP.IHttpService, Narcisa.Servicios.ServicioHTTP.HttpService>();
+builder.Services.AddScoped<Narcisa.Servicios.CarritoStateService>();
+builder.Services.AddScoped<Narcisa.Servicios.AuthStateService>();
+builder.Services.AddScoped(sp =>
+{
+    var nav = sp.GetService<Microsoft.AspNetCore.Components.NavigationManager>();
+    var baseUri = nav?.BaseUri ?? "https://localhost:7158/";
+    return new HttpClient { BaseAddress = new Uri(baseUri) };
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -53,6 +72,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

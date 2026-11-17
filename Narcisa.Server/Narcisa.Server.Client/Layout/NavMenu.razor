@@ -1,30 +1,156 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Narcisa.Server</a>
-    </div>
+@inject CarritoStateService CarritoState
+@inject AuthStateService AuthState
+@implements IDisposable
+
+<div class="top-row px-3 d-flex align-items-center justify-content-between">
+    <a class="navbar-brand fw-bold d-flex align-items-center font-serif text-dark text-decoration-none" href="">
+        <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2 shadow-sm" 
+              style="width: 34px; height: 34px; background-color: #fce8db; color: #e76f51;">
+            <i class="bi bi-flower1 fs-5"></i>
+        </span>
+        <div>
+            <div style="letter-spacing: 1.5px; font-weight: 700; font-size: 1.1rem; line-height: 1.1;">NARCISA</div>
+            <div class="small text-muted" style="font-size: 0.65rem; letter-spacing: 2px; font-family: var(--brand-font-sans);">ESTUDIO</div>
+        </div>
+    </a>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <i class="bi bi-grid-fill me-2 fs-5 text-secondary"></i>
+                <span>Catálogo</span>
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+        <div class="nav-item">
+            <NavLink class="nav-link" href="simulador">
+                <i class="bi bi-palette me-2 fs-5 text-secondary"></i>
+                <span>Simulador de Espacios</span>
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+        <div class="nav-item">
+            <NavLink class="nav-link" href="proyectos">
+                <i class="bi bi-collection me-2 fs-5 text-secondary"></i>
+                <span>Mis Proyectos</span>
             </NavLink>
         </div>
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="asesoramiento">
+                <i class="bi bi-chat-square-heart me-2 fs-5 text-secondary"></i>
+                <span>Asesoramiento</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center justify-content-between" href="carrito">
+                <span>
+                    <i class="bi bi-bag-heart-fill me-2 fs-5 text-secondary"></i>
+                    <span>Carrito</span>
+                </span>
+                @if (CarritoState.CantidadTotalItems > 0)
+                {
+                    <span class="badge bg-warning rounded-pill px-2 py-1">
+                        @CarritoState.CantidadTotalItems
+                    </span>
+                }
+            </NavLink>
+        </div>
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="checkout">
+                <i class="bi bi-credit-card-2-front-fill me-2 fs-5 text-secondary"></i>
+                <span>Checkout</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="mis-pedidos">
+                <i class="bi bi-bag-check me-2 fs-5 text-secondary"></i>
+                <span>Mis Pedidos</span>
+            </NavLink>
+        </div>
+
+        @if (AuthState.UsuarioActual?.Rol == "Admin")
+        {
+            <div class="nav-item my-1">
+                <NavLink class="nav-link d-flex align-items-center justify-content-between text-white rounded-3 mx-2 px-3 py-2 shadow-sm" 
+                         href="admin" 
+                         style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                    <span class="d-flex align-items-center">
+                        <i class="bi bi-gear-wide-connected me-2 fs-5 text-white"></i>
+                        <span class="fw-bold">Panel Administrador</span>
+                    </span>
+                    <span class="badge bg-white text-dark rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700;">
+                        ADMIN
+                    </span>
+                </NavLink>
+            </div>
+        }
+
+        <div class="my-3 mx-3" style="border-top: 1px solid #ebdccd;"></div>
+
+        @if (AuthState.EstaAutenticado)
+        {
+            <div class="px-3 py-2">
+                <div class="p-3 rounded-3 shadow-sm text-center mb-2" 
+                     style="background: linear-gradient(135deg, #fdf6f0 0%, #faeee5 100%); border: 1px solid #ebdccd;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2 shadow-sm"
+                         style="width: 36px; height: 36px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                        <i class="bi bi-person-fill fs-5"></i>
+                    </div>
+                    <div class="fw-bold small text-truncate" style="color: var(--brand-text-dark);" title="@AuthState.UsuarioActual?.Nombre">
+                        Hola, @AuthState.UsuarioActual?.Nombre
+                    </div>
+                    <div class="text-muted" style="font-size: 0.72rem;">@AuthState.UsuarioActual?.Email</div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-2" 
+                        @onclick="CerrarSesion">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Salir</span>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item">
+                <NavLink class="nav-link" href="login">
+                    <i class="bi bi-box-arrow-in-right me-2 fs-5 text-secondary"></i>
+                    <span>Iniciar Sesión</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="register">
+                    <i class="bi bi-person-plus-fill me-2 fs-5 text-secondary"></i>
+                    <span>Registrarse</span>
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        CarritoState.OnChange += StateHasChanged;
+        AuthState.OnChange += StateHasChanged;
+        await CarritoState.InicializarAsync();
+    }
+
+    private void CerrarSesion()
+    {
+        AuthState.Logout();
+    }
+
+    public void Dispose()
+    {
+        CarritoState.OnChange -= StateHasChanged;
+        AuthState.OnChange -= StateHasChanged;
+    }
+}

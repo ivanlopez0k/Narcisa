@@ -1,0 +1,113 @@
+@page "/register"
+@inject AuthStateService AuthState
+@inject NavigationManager Nav
+
+<PageTitle>Crear Cuenta — Narcisa Estudio</PageTitle>
+
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="text-center mb-4">
+            <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2 shadow-sm" 
+                  style="width: 52px; height: 52px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                <i class="bi bi-person-plus-fill fs-3"></i>
+            </span>
+            <h1 class="h3 fw-bold font-serif mb-1" style="color: var(--brand-text-dark);">Creá tu Cuenta</h1>
+            <p class="text-muted small">Registrate para realizar pedidos y gestionar tus compras en Narcisa Estudio.</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
+                <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+            </div>
+        }
+
+        <div class="card border-0 shadow-sm overflow-hidden mb-4">
+            <div class="card-body p-4 p-md-5">
+                <EditForm Model="@registerDto" OnValidSubmit="ProcesarRegistro">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" style="color: var(--brand-text-dark);">Nombre completo (*)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <InputText @bind-Value="registerDto.Nombre" class="form-control border-start-0" 
+                                       placeholder="Ej: Laura González" />
+                        </div>
+                        <ValidationMessage For="@(() => registerDto.Nombre)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" style="color: var(--brand-text-dark);">Correo electrónico (*)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <InputText @bind-Value="registerDto.Email" class="form-control border-start-0" 
+                                       placeholder="nombre@ejemplo.com" type="email" />
+                        </div>
+                        <ValidationMessage For="@(() => registerDto.Email)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small" style="color: var(--brand-text-dark);">Contraseña (*)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <InputText @bind-Value="registerDto.Password" class="form-control border-start-0" 
+                                       placeholder="Mínimo 6 caracteres" type="password" />
+                        </div>
+                        <ValidationMessage For="@(() => registerDto.Password)" class="text-danger small mt-1" />
+                        <div class="form-text small text-muted">Debe contener al menos 6 caracteres.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                            disabled="@procesando">
+                        @if (procesando)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>Registrando cuenta...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                            <span>Crear Cuenta</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+            <div class="card-footer bg-light text-center py-3 border-top" style="border-color: #f0e6dc !important;">
+                <span class="text-muted small">¿Ya tenés una cuenta?</span>
+                <a href="login" class="fw-semibold ms-1 small">Iniciá sesión acá</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterDTO registerDto = new();
+    private bool procesando = false;
+    private string? mensajeError;
+
+    private async Task ProcesarRegistro()
+    {
+        procesando = true;
+        mensajeError = null;
+
+        var (exito, error) = await AuthState.RegisterAsync(registerDto);
+        procesando = false;
+
+        if (exito)
+        {
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            mensajeError = error ?? "Ocurrió un error al registrar la cuenta.";
+        }
+    }
+}

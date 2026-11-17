@@ -1,0 +1,375 @@
+@page "/asesoramiento"
+@rendermode InteractiveAuto
+@inject IHttpService Http
+@inject AuthStateService AuthState
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Asesoramiento & Diseño | Narcisa Estudio</PageTitle>
+
+<div class="container py-4">
+    <!-- Header Editorial Boutique -->
+    <div class="text-center mx-auto mb-5" style="max-width: 780px;">
+        <span class="badge rounded-pill px-3 py-2 text-uppercase mb-3 shadow-sm"
+              style="background-color: var(--brand-peach-soft); color: var(--brand-peach); font-size: 0.75rem; letter-spacing: 2px; font-weight: 700;">
+            <i class="bi bi-sparkles me-1"></i> Asesoría Personalizada 1 a 1
+        </span>
+        <h1 class="font-serif fw-bold mb-3" style="color: var(--brand-text-dark); font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.2;">
+            Asesoramiento &amp; Diseño de Espacios
+        </h1>
+        <p class="text-muted fs-5 mb-4" style="line-height: 1.6;">
+            Transformá tu hogar con la mirada de nuestras arquitectas e interioristas. Recibí recomendaciones exclusivas en paleta de colores, disposición de muebles y armonía integral.
+        </p>
+
+        <!-- Beneficios en píldoras -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 pt-2">
+            <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" style="background-color: #ffffff; border: 1px solid #ebdccd; font-size: 0.88rem;">
+                <i class="bi bi-check-circle-fill" style="color: var(--brand-peach);"></i>
+                <span class="fw-semibold">Cita virtual o presencial</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" style="background-color: #ffffff; border: 1px solid #ebdccd; font-size: 0.88rem;">
+                <i class="bi bi-check-circle-fill" style="color: var(--brand-peach);"></i>
+                <span class="fw-semibold">Propuesta estética y funcional</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" style="background-color: #ffffff; border: 1px solid #ebdccd; font-size: 0.88rem;">
+                <i class="bi bi-check-circle-fill" style="color: var(--brand-peach);"></i>
+                <span class="fw-semibold">Integración con el catálogo Narcisa</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner si no está autenticado -->
+    @if (!AuthState.EstaAutenticado)
+    {
+        <div class="card p-3 p-md-4 mb-4 border-0 shadow-sm" 
+             style="background: linear-gradient(135deg, #fdf8f4 0%, #faeee5 100%); border-left: 4px solid var(--brand-peach) !important;">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm flex-shrink-0"
+                         style="width: 44px; height: 44px; background-color: var(--brand-peach-soft); color: var(--brand-peach);">
+                        <i class="bi bi-person-exclamation fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1" style="color: var(--brand-text-dark);">Iniciá sesión para guardar y seguir tus consultas</h6>
+                        <p class="text-muted small mb-0">Podés explorar y enviar tu solicitud; si iniciás sesión quedará vinculada permanentemente a tu perfil de Narcisa.</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="login?returnUrl=/asesoramiento" class="btn btn-outline-primary btn-sm px-3 text-nowrap">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Feedback Alerts -->
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-3 p-3 mb-4 shadow-sm" 
+             style="background-color: #f1f8f3; border-color: #cde4d3; color: #1c522d; border-radius: 12px;" role="alert">
+            <i class="bi bi-check2-circle fs-3 text-success"></i>
+            <div>
+                <strong>¡Solicitud enviada con éxito!</strong>
+                <div>@mensajeExito</div>
+            </div>
+            <button type="button" class="btn-close ms-auto" @onclick="() => mensajeExito = null"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-3 p-3 mb-4 shadow-sm" 
+             style="border-radius: 12px;" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-3 text-danger"></i>
+            <div>
+                <strong>Ocurrió un problema:</strong>
+                <div>@mensajeError</div>
+            </div>
+            <button type="button" class="btn-close ms-auto" @onclick="() => mensajeError = null"></button>
+        </div>
+    }
+
+    <!-- Grid Principal -->
+    <div class="row g-4 align-items-start">
+        <!-- Columna 1: Formulario de Solicitud -->
+        <div class="col-12 col-lg-7">
+            <div class="card p-4 p-md-5 border-0 shadow-sm" style="background-color: #ffffff;">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                    <div>
+                        <h2 class="font-serif fw-bold mb-1" style="color: var(--brand-text-dark); font-size: 1.5rem;">
+                            Completar Solicitud
+                        </h2>
+                        <span class="text-muted small">Detallá lo que buscás para que podamos preparar tu encuentro.</span>
+                    </div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                        <i class="bi bi-brush fs-5"></i>
+                    </div>
+                </div>
+
+                <EditForm Model="nuevoAsesoramiento" OnValidSubmit="EnviarSolicitud">
+                    <DataAnnotationsValidator />
+
+                    <!-- Selector de Tipo de Espacio -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-uppercase" style="letter-spacing: 0.5px; color: var(--brand-text-dark);">
+                            <i class="bi bi-house-heart me-1" style="color: var(--brand-peach);"></i> Espacio a Intervenir
+                        </label>
+                        <InputSelect class="form-select py-2 shadow-none" @bind-Value="nuevoAsesoramiento.TipoEspacio"
+                                     style="border-color: #ebdccd; border-radius: 8px; font-size: 0.95rem;">
+                            <option value="Living / Sala de Estar">Living / Sala de Estar</option>
+                            <option value="Dormitorio Principal">Dormitorio Principal</option>
+                            <option value="Cocina o Comedor">Cocina o Comedor</option>
+                            <option value="Espacio de Trabajo / Home Office">Espacio de Trabajo / Home Office</option>
+                            <option value="Proyecto Integral">Proyecto Integral (Toda la casa o depto)</option>
+                        </InputSelect>
+                        <div class="form-text small text-muted">Seleccioná el ambiente principal sobre el que querés enfocarte.</div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-uppercase" style="letter-spacing: 0.5px; color: var(--brand-text-dark);">
+                            <i class="bi bi-pencil-square me-1" style="color: var(--brand-peach);"></i> Descripción de tu proyecto
+                        </label>
+                        <InputTextArea class="form-control shadow-none" rows="4" 
+                                       placeholder="Ej: Busco renovar la iluminación y agregar un sofá modular cálido. Me gusta la madera clara y los tonos neutros..."
+                                       @bind-Value="nuevoAsesoramiento.Descripcion"
+                                       style="border-color: #ebdccd; border-radius: 8px; font-size: 0.95rem; line-height: 1.5;" />
+                        <ValidationMessage For="() => nuevoAsesoramiento.Descripcion" class="text-danger small mt-1" />
+                        <div class="form-text small text-muted">
+                            Contanos dimensiones aproximadas, qué estilo te inspira o qué elementos querés conservar.
+                        </div>
+                    </div>
+
+                    <!-- Disponibilidad Horaria -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-uppercase" style="letter-spacing: 0.5px; color: var(--brand-text-dark);">
+                            <i class="bi bi-calendar3 me-1" style="color: var(--brand-peach);"></i> Disponibilidad Horaria &amp; Modalidad
+                        </label>
+                        <InputText class="form-control py-2 shadow-none" 
+                                   placeholder="Ej: Lunes o Miércoles por la tarde (16 a 19 hs) - Videollamada Google Meet"
+                                   @bind-Value="nuevoAsesoramiento.Disponibilidad"
+                                   style="border-color: #ebdccd; border-radius: 8px; font-size: 0.95rem;" />
+                        <ValidationMessage For="() => nuevoAsesoramiento.Disponibilidad" class="text-danger small mt-1" />
+                        <div class="form-text small text-muted">
+                            Indicanos días de la semana y franjas horarias en las que podrías coordinar la sesión.
+                        </div>
+                    </div>
+
+                    <!-- Botón Enviar -->
+                    <button type="submit" 
+                            class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow"
+                            disabled="@estaEnviando">
+                        @if (estaEnviando)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Enviando Solicitud...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-send-fill"></i>
+                            <span>Enviar Solicitud de Asesoramiento</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+
+        <!-- Columna 2: Mis Solicitudes Activas -->
+        <div class="col-12 col-lg-5">
+            <div class="card p-4 p-md-4 border-0 shadow-sm" style="background-color: #ffffff;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <h2 class="font-serif fw-bold mb-1" style="color: var(--brand-text-dark); font-size: 1.35rem;">
+                            Mis Solicitudes Activas
+                        </h2>
+                        <span class="text-muted small">Seguimiento en tiempo real de tus consultas.</span>
+                    </div>
+                    <span class="badge rounded-pill px-3 py-2" style="background-color: var(--brand-peach-soft); color: var(--brand-peach); font-weight: 600;">
+                        @(solicitudes?.Count ?? 0)
+                    </span>
+                </div>
+
+                @if (estaCargando)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status" style="color: var(--brand-peach) !important;">
+                            <span class="visually-hidden">Cargando solicitudes...</span>
+                        </div>
+                        <p class="text-muted mt-2 small">Cargando tus solicitudes...</p>
+                    </div>
+                }
+                else if (solicitudes == null || solicitudes.Count == 0)
+                {
+                    <div class="text-center py-5 px-3">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm"
+                             style="width: 56px; height: 56px; background-color: var(--brand-peach-light); color: var(--brand-peach);">
+                            <i class="bi bi-chat-heart fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1" style="color: var(--brand-text-dark);">Aún no tenés solicitudes</h6>
+                        <p class="text-muted small mb-0 mx-auto" style="max-width: 280px;">
+                            Completá el formulario para solicitar tu primera sesión de diseño personalizado con nuestro equipo.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-3" style="max-height: 600px; overflow-y: auto;">
+                        @foreach (var item in solicitudes)
+                        {
+                            <div class="card p-3 border shadow-sm" 
+                                 style="background-color: #fdfbf7; border-color: #ebdccd !important; transition: transform 0.15s ease;">
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <div class="small text-muted d-flex align-items-center gap-1">
+                                        <i class="bi bi-calendar3"></i>
+                                        <span>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                    <div>
+                                        @if (item.Estado == "Nueva")
+                                        {
+                                            <span class="badge rounded-pill px-2 py-1 shadow-sm"
+                                                  style="background-color: var(--brand-peach-soft); color: var(--brand-peach); border: 1px solid #f4c2b3;">
+                                                <i class="bi bi-stars me-1"></i> Nueva
+                                            </span>
+                                        }
+                                        else if (item.Estado == "En proceso")
+                                        {
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1">
+                                                <i class="bi bi-clock-history me-1"></i> En proceso
+                                            </span>
+                                        }
+                                        else if (item.Estado == "Respondida")
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1">
+                                                <i class="bi bi-check2-circle me-1"></i> Respondida
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1">
+                                                @item.Estado
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <p class="mb-0 text-dark small" style="line-height: 1.5; font-size: 0.9rem; white-space: pre-line;">
+                                        @item.Descripcion
+                                    </p>
+                                </div>
+
+                                <div class="pt-2 border-top d-flex align-items-center gap-2 small text-muted" style="border-color: #ebdccd !important; font-size: 0.8rem;">
+                                    <i class="bi bi-clock text-secondary"></i>
+                                    <span class="text-truncate" title="@item.Disponibilidad">@item.Disponibilidad</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CrearAsesoramientoDTO nuevoAsesoramiento = new();
+    private List<AsesoramientoDTO>? solicitudes;
+    private bool estaCargando = true;
+    private bool estaEnviando = false;
+    private string? mensajeExito;
+    private string? mensajeError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnChange += HandleAuthChange;
+        await CargarSolicitudes();
+    }
+
+    private async void HandleAuthChange()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CargarSolicitudes();
+            StateHasChanged();
+        });
+    }
+
+    private int ObtenerUsuarioId()
+    {
+        return AuthState.UsuarioActual?.Id ?? 1;
+    }
+
+    private async Task CargarSolicitudes()
+    {
+        try
+        {
+            estaCargando = true;
+            int usuarioId = ObtenerUsuarioId();
+            var resp = await Http.GetAsync<List<AsesoramientoDTO>>($"api/asesoramiento/usuario/{usuarioId}");
+            if (!resp.Error && resp.Respuesta != null)
+            {
+                solicitudes = resp.Respuesta;
+            }
+            else
+            {
+                solicitudes = new List<AsesoramientoDTO>();
+            }
+        }
+        catch (Exception ex)
+        {
+            solicitudes = new List<AsesoramientoDTO>();
+            mensajeError = $"Error al recuperar solicitudes: {ex.Message}";
+        }
+        finally
+        {
+            estaCargando = false;
+        }
+    }
+
+    private async Task EnviarSolicitud()
+    {
+        try
+        {
+            estaEnviando = true;
+            mensajeError = null;
+            mensajeExito = null;
+
+            int usuarioId = ObtenerUsuarioId();
+            nuevoAsesoramiento.UsuarioId = usuarioId;
+
+            var resp = await Http.PostAsync<CrearAsesoramientoDTO, AsesoramientoDTO>(
+                $"api/asesoramiento?usuarioId={usuarioId}", 
+                nuevoAsesoramiento);
+
+            if (!resp.Error && resp.Respuesta != null)
+            {
+                mensajeExito = "Tu solicitud ha sido recibida por el equipo de diseño. Te contactaremos a la brevedad según tu disponibilidad.";
+                
+                // Reiniciar formulario
+                nuevoAsesoramiento = new CrearAsesoramientoDTO();
+
+                // Recargar solicitudes
+                await CargarSolicitudes();
+            }
+            else
+            {
+                mensajeError = resp.Mensaje ?? "No se pudo procesar la solicitud. Por favor verificá los datos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Ocurrió un error inesperado al enviar: {ex.Message}";
+        }
+        finally
+        {
+            estaEnviando = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= HandleAuthChange;
+    }
+}
